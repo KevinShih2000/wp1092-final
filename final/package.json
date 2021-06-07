@@ -1,0 +1,8 @@
+{
+  "name": "wp1092",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/KevinShih2000/wp1092.git",
+  "author": "Kevin <kevin09shih@gmail.com>",
+  "license": "MIT"
+}
