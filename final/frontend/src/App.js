@@ -1,16 +1,24 @@
-import { useState } from 'react';
+import { Switch, Route } from 'react-router-dom';
 
 import './App.css';
 
-import Signin from './components/Signin';
 import MainPage from './components/MainPage';
+import SignupPage from './components/SignupPage';
+import LoginPage from './components/LoginPage';
 
 function App() {
-    const [alreadySignedIn, setAlreadySignedIn] = useState(false);
     return (
-        <div>
-            <MainPage />
-        </div>
+        <Switch>
+            <Route path="/signup">
+                <SignupPage />
+            </Route>
+            <Route path="/login">
+                <LoginPage />
+            </Route>
+            <Route path="/">
+                <MainPage />
+            </Route>
+        </Switch>
     );
 }
 
