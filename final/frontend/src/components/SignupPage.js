@@ -11,7 +11,6 @@ import Container from '@material-ui/core/Container';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Grid from '@material-ui/core/Grid';
-import Link from '@material-ui/core/Link';
 import Snackbar from '@material-ui/core/Snackbar';
 import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
@@ -25,7 +24,7 @@ import axios from 'axios';
 
 const instance = axios.create({
     baseURL: process.env.REACT_APP_API_BASE_URL,
-    timeout: 2000
+    timeout: 60000
 });
 
 const useStyles = makeStyles((theme) => ({
@@ -60,7 +59,7 @@ function Alert(props) {
     return <MuiAlert elevation={6} variant="filled" {...props} />;
 }
 
-function LoginPage() {
+function SignupPage() {
     const classes = useStyles();
 
     const [username, setUsername] = useState('');
@@ -70,11 +69,11 @@ function LoginPage() {
     const [passwordMismatch, setPasswordMismatch] = useState(false);
     const [duplicateUserError, setDuplicateUserError] = useState(false);
     const [showCircularProgress, setShowCircularProgress] = useState(false);
-    const [showLoginSuccess, setShowLoginSuccess] = useState(false);
-    const [showLoginError, setShowLoginError] = useState(false);
+    const [showSignupSuccess, setShowSignupSuccess] = useState(false);
+    const [showSignupError, setShowSignupError] = useState(false);
     const [redirectToLoginPage, setRedirectToLoginPage] = useState(false);
 
-    const [loginErrorMessage, setLoginErrorMessage] = useState('');
+    const [signupErrorMessage, setSignupErrorMessage] = useState('');
 
     async function checkDuplicateUsername(event) {
         if (!username) {
@@ -121,46 +120,54 @@ function LoginPage() {
             const data = result.data;
             if (data.status === 'success') {
                 setShowCircularProgress(false);
-                setShowLoginSuccess(true);
+                setShowSignupSuccess(true);
             }
         }
         catch (error) {
             if (error.message === 'Network Error') {
-                setShowLoginError(true);
-                setLoginErrorMessage('Backend is unreachable. Please contact the administrator');
+                setShowSignupError(true);
+                setSignupErrorMessage('Backend is unreachable. Please contact the administrator.');
+            }
+            else if (/^timeout of [0-9]+ms exceeded$/.test(error.message)) {
+                setShowSignupError(true);
+                setSignupErrorMessage('Connection Timeout. Please contact the administrator.');
             }
             else if (error.response) {
                 const data = error.response.data;
                 if (data.status === 'failed') {
                     if (data.reason === 'DuplicateUserError') {
-                        setShowLoginError(true);
-                        setLoginErrorMessage('Duplicate user found.');
+                        setShowSignupError(true);
+                        setSignupErrorMessage('Duplicate user found.');
                     }
                     else if (data.reason === 'DatabaseFailedError') {
-                        setShowLoginError(true);
-                        setLoginErrorMessage('Database error. Please contact the administrator');
+                        setShowSignupError(true);
+                        setSignupErrorMessage('Database error. Please contact the administrator.');
+                    }
+                    else if (data.reason === 'EmptyBodyError' || data.reason === 'TypeError') {
+                        setShowSignupError(true);
+                        setSignupErrorMessage('Invalid response.');
                     }
                 }
                 else {
-                    setShowLoginError(true);
-                    setLoginErrorMessage('Unknown error. Please contact the administrator');
+                    setShowSignupError(true);
+                    setSignupErrorMessage('Unknown error. Please contact the administrator.');
                 }
             }
             else {
-                setShowLoginError(true);
-                setLoginErrorMessage('Unknown error. Please contact the administrator');
+                setShowSignupError(true);
+                setSignupErrorMessage('Unknown error. Please contact the administrator.');
             }
             setShowCircularProgress(false);
         }
     }
 
-    function handleCloseLoginSuccessMessage() {
+    function handleCloseSignupSuccessMessage() {
         setRedirectToLoginPage(true);
     }
 
     function handleCloseErrorMessage() {
-        setShowLoginError(false);
-        setLoginErrorMessage('');
+        setShowSignupError(false);
+        setSignupErrorMessage('');
     }
 
     return (
@@ -231,15 +238,15 @@ function LoginPage() {
                     </Button>
                 </form>
                 { showCircularProgress && <CircularProgress color='secondary' /> }
-                <Snackbar open={ showLoginSuccess } autoHideDuration={ 2000 } onClose={ handleCloseLoginSuccessMessage }>
+                <Snackbar open={ showSignupSuccess } autoHideDuration={ 2000 } onClose={ handleCloseSignupSuccessMessage }>
                     <Alert severity='success'>
                         Sign up Success. Redirecting...
                     </Alert>
                 </Snackbar>
-                <Snackbar open={ showLoginError } autoHideDuration={ 6000 } onClose={ handleCloseLoginSuccessMessage }>
+                <Snackbar open={ showSignupError } autoHideDuration={ 6000 } onClose={ handleCloseSignupSuccessMessage }>
                     <Alert onClose={ handleCloseErrorMessage } severity='error'>
                     {
-                        loginErrorMessage
+                        signupErrorMessage
                     }
                     </Alert>
                 </Snackbar>
@@ -248,4 +255,4 @@ function LoginPage() {
     );
 }
 
-export default LoginPage;
+export default SignupPage;

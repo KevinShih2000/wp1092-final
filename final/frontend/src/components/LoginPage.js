@@ -19,13 +19,12 @@ import Typography from '@material-ui/core/Typography';
 
 import MuiAlert from '@material-ui/lab/Alert';
 
-import { Link as RouterLink } from 'react-router-dom';
-
+import { Link as RouterLink, Redirect } from 'react-router-dom';
 import axios from 'axios';
 
 const instance = axios.create({
     baseURL: process.env.REACT_APP_API_BASE_URL,
-    timeout: 2000
+    timeout: 60000
 });
 
 const useStyles = makeStyles((theme) => ({
@@ -54,13 +53,16 @@ const useStyles = makeStyles((theme) => ({
     submit: {
         margin: theme.spacing(3, 0, 2),
     },
+    progress: {
+        marginTop: theme.spacing(2)
+    }
 }));
 
 function Alert(props) {
     return <MuiAlert elevation={6} variant="filled" {...props} />;
 }
 
-function LoginPage() {
+function LoginPage(props) {
     const classes = useStyles();
 
     const [username, setUsername] = useState('');
@@ -73,7 +75,11 @@ function LoginPage() {
 
     const [loginErrorMessage, setLoginErrorMessage] = useState('');
 
+    const setIsLoggedIn = props.setIsLoggedIn;
+    const setLoginUsername = props.setLoginUsername;
+
     function handleCloseLoginSuccessMessage() {
+        setIsLoggedIn(true);
         setRedirectToMainPage(true);
     }
 
@@ -82,12 +88,64 @@ function LoginPage() {
         setLoginErrorMessage('');
     }
 
-    function loginAndRedirectToMainPage(event) {
-        
+    async function loginAndRedirectToMainPage(event) {
+        event.preventDefault();
+
+        try {
+            setShowCircularProgress(true);
+            const result = await instance.post('/login', {
+                username: username,
+                password: password
+            }, { withCredentials: true });
+            const data = result.data;
+            if (data.status === 'success') {
+                setShowCircularProgress(false);
+                setShowLoginSuccess(true);
+                setLoginUsername(username);
+            }
+        }
+        catch (error) {
+            if (error.message === 'Network Error') {
+                setShowLoginError(true);
+                setLoginErrorMessage('Backend is unreachable. Please contact the administrator.');
+            }
+            else if (/^timeout of [0-9]+ms exceeded$/.test(error.message)) {
+                setShowLoginError(true);
+                setLoginErrorMessage('Connection Timeout. Please contact the administrator.');
+            }
+            else if (error.response) {
+                const data = error.response.data;
+                if (data.status === 'failed') {
+                    if (data.reason === 'InvalidUsernameOrPassword') {
+                        setShowLoginError(true);
+                        setLoginErrorMessage('Invalid username or password.');
+                    }
+                    else if (data.reason === 'DatabaseFailedError') {
+                        setShowLoginError(true);
+                        setLoginErrorMessage('Database error. Please contact the administrator.');
+                    }
+                    else if (data.reason === 'EmptyBodyError' || data.reason === 'TypeError') {
+                        setShowLoginError(true);
+                        setLoginErrorMessage('Invalid response.');
+                    }
+                }
+                else {
+                    setShowLoginError(true);
+                    setLoginErrorMessage('Unknown error. Please contact the administrator.');
+                }
+            }
+            else {
+                setShowLoginError(true);
+                setLoginErrorMessage('Unknown error. Please contact the administrator.');
+            }
+            setShowCircularProgress(false);
+        }
     }
 
     return (
-        <Container component='main' maxWidth='xs'>
+        redirectToMainPage
+        ? <Redirect to='/' />
+        : <Container component='main' maxWidth='xs'>
             <CssBaseline />
             <div className={ classes.paper }>
                 <Avatar className={ classes.avatar } variant='rounded'>
@@ -107,6 +165,7 @@ function LoginPage() {
                         autoFocus
                         required
                         fullWidth
+                        onChange={ (event) => setUsername(event.target.value) }
                     />
                     <TextField
                         variant='outlined'
@@ -118,17 +177,16 @@ function LoginPage() {
                         autoComplete='current-password'
                         required
                         fullWidth
-                    />
-                    <FormControlLabel
-                        control={<Checkbox value='remember' color='secondary' />}
-                        label='Remember me'
+                        onChange={ (event) => setPassword(event.target.value) }
                     />
                     <Button
                         type='submit'
                         fullWidth
                         variant='contained'
                         color='primary'
-                        className={classes.submit}
+                        disabled={ !username || !password }
+                        className={ classes.submit }
+                        onClick={ loginAndRedirectToMainPage }
                     >
                         Sign In
                     </Button>
@@ -140,13 +198,13 @@ function LoginPage() {
                         </Grid>
                     </Grid>
                 </form>
-                { showCircularProgress && <CircularProgress color='secondary' /> }
+                { showCircularProgress && <CircularProgress color='secondary' className={ classes.progress } /> }
                 <Snackbar open={ showLoginSuccess } autoHideDuration={ 2000 } onClose={ handleCloseLoginSuccessMessage }>
                     <Alert severity='success'>
                         Login Success. Redirecting...
                     </Alert>
                 </Snackbar>
-                <Snackbar open={ showLoginError } autoHideDuration={ 6000 } onClose={ handleCloseLoginSuccessMessage }>
+                <Snackbar open={ showLoginError } autoHideDuration={ 6000 } onClose={ handleCloseErrorMessage }>
                     <Alert onClose={ handleCloseErrorMessage } severity='error'>
                     {
                         loginErrorMessage

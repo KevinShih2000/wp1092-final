@@ -2,11 +2,16 @@ import { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 
 import AppBar from '@material-ui/core/AppBar';
+import Backdrop from '@material-ui/core/Backdrop';
 import Badge from '@material-ui/core/Badge';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import Container from '@material-ui/core/Container';
+import CircularProgress from '@material-ui/core/CircularProgress';
 import CssBaseline from '@material-ui/core/CssBaseline';
+import Dialog from '@material-ui/core/Dialog';
+import DialogActions from '@material-ui/core/DialogActions';
+import DialogTitle from '@material-ui/core/DialogTitle';
 import Divider from '@material-ui/core/Divider';
 import Drawer from '@material-ui/core/Drawer';
 import Grid from '@material-ui/core/Grid';
@@ -25,19 +30,29 @@ import AccountBoxIcon from '@material-ui/icons/AccountBox';
 import AddBoxIcon from '@material-ui/icons/AddBox';
 import AssignmentIcon from '@material-ui/icons/Assignment';
 import BarChartIcon from '@material-ui/icons/BarChart';
+import ChatIcon from '@material-ui/icons/Chat';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
-import DashboardIcon from '@material-ui/icons/Dashboard';
+import HomeIcon from '@material-ui/icons/Home';
 import LayersIcon from '@material-ui/icons/Layers';
 import MenuIcon from '@material-ui/icons/Menu';
+import MeetingRoomIcon from '@material-ui/icons/MeetingRoom';
 import NotificationsIcon from '@material-ui/icons/Notifications';
 import PeopleIcon from '@material-ui/icons/People';
-import ShoppingCartIcon from '@material-ui/icons/ShoppingCart';
+import SettingsIcon from '@material-ui/icons/Settings';
 
-import clsx from 'clsx';
 import { Link as RouterLink } from 'react-router-dom';
+import clsx from 'clsx';
+import axios from 'axios';
 
-const drawerWidth = 240;
-const menuHeight = 64;
+import Lobby from './Lobby';
+
+const drawerWidth = '16vw';
+const remainWidth = '84vw';
+
+const instance = axios.create({
+    baseURL: process.env.REACT_APP_API_BASE_URL,
+    timeout: 60000
+});
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -55,16 +70,20 @@ const useStyles = makeStyles((theme) => ({
     },
     appBar: {
         zIndex: theme.zIndex.drawer + 1,
-        marginLeft: drawerWidth,
-        width: '100%',
+        width: remainWidth,
+        left: drawerWidth,
         backgroundColor: theme.palette.primary.dark
     },
     menuButton: {
         marginRight: 24,
-        color: '#efefef',
-        borderColor: '#efefef',
-        borderWidth: '2px',
-        borderRadius: '16px'
+        color: theme.palette.primary.main,
+        borderColor: theme.palette.primary.main,
+        backgroundColor: 'white',
+        borderRadius: '8px',
+        '&:hover': {
+            backgroundColor: '#7aa7c7',
+            color: '#efefef',
+        }
     },
     menuButtonHidden: {
         display: 'none',
@@ -73,11 +92,13 @@ const useStyles = makeStyles((theme) => ({
         color: '#efefef',
         flexGrow: 1,
     },
+    username: {
+        marginRight: theme.spacing(2)
+    },
     drawerPaper: {
         position: 'absolute',
         whiteSpace: 'nowrap',
         width: drawerWidth,
-        top: menuHeight,
         transition: theme.transitions.create('width', {
             easing: theme.transitions.easing.sharp,
             duration: theme.transitions.duration.enteringScreen,
@@ -101,69 +122,99 @@ const useStyles = makeStyles((theme) => ({
         overflow: 'auto',
     },
     container: {
+        position: 'absolute',
+        left: drawerWidth,
+        right: 0,
+        width: remainWidth,
         paddingTop: theme.spacing(4),
         paddingBottom: theme.spacing(4),
+    },
+    listItem: {
+        color: 'rgba(0, 0, 0, 0.8)',
+        '&:hover': {
+            textDecoration: 'none',
+        }
     },
     paper: {
         padding: theme.spacing(2),
         display: 'flex',
         overflow: 'auto',
         flexDirection: 'column',
-    },
-    fixedHeight: {
-        height: 240,
+        backgroundColor: '#f5f5f5',
     },
     linkText: {
         color: '#efefef'
-    }
+    },
+    backdrop: {
+        zIndex: theme.zIndex.drawer + 1
+    },
 }));
 
-function MainPage() {
+function LogoutDialog({ open, handleLogout }) {
+    return (
+        <Dialog
+            open={ open }
+            onClose={ () => handleLogout(false) }
+            aria-labelledby="alert-dialog-title"
+            aria-describedby="alert-dialog-description"
+        >
+            <DialogTitle id="alert-dialog-title">Do you really want to logout?</DialogTitle>
+            <DialogActions>
+                <Button onClick={ () => handleLogout(false) } color="primary">
+                    Stay
+                </Button>
+                <Button onClick={ () => handleLogout(true) } color="primary" autoFocus>
+                    Logout
+                </Button>
+            </DialogActions>
+        </Dialog>
+    );
+}
+
+function MainPage(props) {
     const classes = useStyles();
-    const fixedHeightPaper = clsx(classes.paper, classes.fixedHeight);
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+    const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+    const [showCircularProgress, setShowCircularProgress] = useState(false);
+
+    const setIsLoggedIn = props.setIsLoggedIn;
+    const username = props.username;
+    const setUsername = props.setUsername;
+
+    async function handleLogout(logout) {
+        setShowLogoutDialog(false);
+        if (logout) {
+            setShowCircularProgress(true);
+            const result = await instance.post('/logout', null, { withCredentials: true });
+            const data = result.data;
+            setShowCircularProgress(false);
+            if (data.status === 'success') {
+                setIsLoggedIn(false);
+            }
+        }
+    }
+
     return (
         <div className={classes.root}>
             <CssBaseline />
             <AppBar position="absolute" className={ classes.appBar }>
-                <Toolbar className={classes.toolbar}>
+                <Toolbar className={ classes.toolbar }>
                     <Typography component="h1" variant="h6" noWrap className={ classes.title }>
                         Dashboard
                     </Typography>
-                    {
-                        isLoggedIn
-                        ? <>
-                            <Button
-                                variant="outlined"
-                                startIcon={ <AddBoxIcon /> }
-                                className={ classes.menuButton }
-                            >
-                                <Link component={ RouterLink } to="/logout" className={ classes.linkText } >
-                                    Logout
-                                </Link>
-                            </Button>
-                        </>
-                        : <>
-                            <Button
-                                variant="outlined"
-                                startIcon={ <AddBoxIcon /> }
-                                className={ classes.menuButton }
-                            >
-                                <Link component={ RouterLink } to="/signup" className={ classes.linkText }>
-                                    Sign Up
-                                </Link>
-                            </Button>
-                            <Button
-                                variant="outlined"
-                                startIcon={ <AccountBoxIcon /> }
-                                className={ classes.menuButton }
-                            >
-                                <Link component={ RouterLink } to="/login" className={ classes.linkText }>
-                                    Login
-                                </Link>
-                            </Button>
-                        </>
-                    }
+                    <Typography component="h1" variant="h6" className={ classes.username }>
+                        Hi, { username }!
+                    </Typography>
+                    <Link component={ RouterLink } to="/logout">
+                        <Button
+                            variant="outlined"
+                            startIcon={ <AddBoxIcon /> }
+                            className={ classes.menuButton }
+                            onClick={ () => setShowLogoutDialog(true) }
+                        >
+                                Logout
+                        </Button>
+                    </Link>
                 </Toolbar>
             </AppBar>
             <Drawer
@@ -172,57 +223,55 @@ function MainPage() {
                     paper: classes.drawerPaper
                 }}
             >
-                <Divider />
-                    <List>
-                        <ListItem button>
-                            <ListItemIcon>
-                                <DashboardIcon />
-                            </ListItemIcon>
-                            <ListItemText primary="Dashboard" />
-                        </ListItem>
-                        <ListItem button>
-                            <ListItemIcon>
-                                <ShoppingCartIcon />
-                            </ListItemIcon>
-                            <ListItemText primary="Orders" />
-                        </ListItem>
-                        <ListItem button>
-                            <ListItemIcon>
-                                <PeopleIcon />
-                            </ListItemIcon>
-                            <ListItemText primary="Customers" />
-                        </ListItem>
-                        <ListItem button>
-                            <ListItemIcon>
-                                <BarChartIcon />
-                            </ListItemIcon>
-                            <ListItemText primary="Reports" />
-                        </ListItem>
-                        <ListItem button>
-                            <ListItemIcon>
-                                <LayersIcon />
-                            </ListItemIcon>
-                            <ListItemText primary="Integrations" />
-                        </ListItem>
-                    </List>
-                <Divider />
                 <List>
-                    <ListSubheader inset>Saved reports</ListSubheader>
-                    <ListItem button>
-                        <ListItemIcon>
-                            <AssignmentIcon />
-                        </ListItemIcon>
-                        <ListItemText primary="Current month" />
-                    </ListItem>
+                    <Link component={ RouterLink } to="/home" className={ classes.listItem }>
+                        <ListItem button>
+                            <ListItemIcon>
+                                <HomeIcon />
+                            </ListItemIcon>
+                            <ListItemText primary="Home" />
+                        </ListItem>
+                    </Link>
+                    <Link component={ RouterLink } to="/chat" className={ classes.listItem }>
+                        <ListItem button>
+                            <ListItemIcon>
+                                <ChatIcon />
+                            </ListItemIcon>
+                            <ListItemText primary="Chat" />
+                        </ListItem>
+                    </Link>
+                    <Link component={ RouterLink } to="/meeting" className={ classes.listItem }>
+                        <ListItem button>
+                            <ListItemIcon>
+                                <MeetingRoomIcon />
+                            </ListItemIcon>
+                            <ListItemText primary="Meeting" />
+                        </ListItem>
+                    </Link>
+                    <Link component={ RouterLink } to="/setting" className={ classes.listItem }>
+                        <ListItem button>
+                            <ListItemIcon>
+                                <SettingsIcon />
+                            </ListItemIcon>
+                            <ListItemText primary="Setting" />
+                        </ListItem>
+                    </Link>
                 </List>
             </Drawer>
-            <main className={classes.content}>
-                <div className={classes.appBarSpacer} />
-                <Container maxWidth="lg" className={classes.container}>
-                    <Grid container spacing={3}>
+            <main className={ classes.content }>
+                <div className={ classes.appBarSpacer } />
+                <Container className={ classes.container }>
+                    <Grid item xs={8}>
+                        <Paper className={ classes.paper }>
+                            <Lobby />
+                        </Paper>
                     </Grid>
                 </Container>
             </main>
+            <Backdrop className={ classes.backdrop } open={ showCircularProgress }>
+                <CircularProgress color='primary' className={ classes.progress } />
+            </Backdrop>
+            <LogoutDialog open={ showLogoutDialog } handleLogout={ handleLogout } />
         </div>
     );
 }
