@@ -261,10 +261,17 @@ function MainPage(props) {
             <main className={ classes.content }>
                 <div className={ classes.appBarSpacer } />
                 <Container className={ classes.container }>
-                    <Grid item xs={8}>
-                        <Paper className={ classes.paper }>
-                            <Lobby />
-                        </Paper>
+                    <Grid container>
+                        <Grid item xs={8}>
+                            <Paper className={ classes.paper }>
+                                <Lobby />
+                            </Paper>
+                        </Grid>
+                        <Grid item xs={4}>
+                            <Paper className={ classes.paper }>
+                                <Lobby />
+                            </Paper>
+                        </Grid>
                     </Grid>
                 </Container>
             </main>
