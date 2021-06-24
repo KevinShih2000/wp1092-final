@@ -45,6 +45,7 @@ import clsx from 'clsx';
 import axios from 'axios';
 
 import Lobby from './Lobby';
+import Users from './Users';
 
 const drawerWidth = '16vw';
 const remainWidth = '84vw';
@@ -248,6 +249,14 @@ function MainPage(props) {
                             <ListItemText primary="Meeting" />
                         </ListItem>
                     </Link>
+                    <Link component={ RouterLink } to="/friends" className={ classes.listItem }>
+                        <ListItem button>
+                            <ListItemIcon>
+                                <PeopleIcon />
+                            </ListItemIcon>
+                            <ListItemText primary="Friends" />
+                        </ListItem>
+                    </Link>
                     <Link component={ RouterLink } to="/setting" className={ classes.listItem }>
                         <ListItem button>
                             <ListItemIcon>
@@ -261,7 +270,7 @@ function MainPage(props) {
             <main className={ classes.content }>
                 <div className={ classes.appBarSpacer } />
                 <Container className={ classes.container }>
-                    <Grid container>
+                    <Grid container spacing={3}>
                         <Grid item xs={8}>
                             <Paper className={ classes.paper }>
                                 <Lobby />
@@ -269,7 +278,7 @@ function MainPage(props) {
                         </Grid>
                         <Grid item xs={4}>
                             <Paper className={ classes.paper }>
-                                <Lobby />
+                                <Users />
                             </Paper>
                         </Grid>
                     </Grid>

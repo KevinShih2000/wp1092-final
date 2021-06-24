@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import Button from '@material-ui/core/Button';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
@@ -104,13 +105,14 @@ const roomRows = [
 const useStyles2 = makeStyles({
     table: {
         minWidth: 500,
+        minHeight: 500,
     },
 });
 
 function Lobby() {
     const classes = useStyles2();
     const [page, setPage] = React.useState(0);
-    const rowsPerPage = 9;
+    const rowsPerPage = 7;
 
     const emptyRows = rowsPerPage - Math.min(rowsPerPage, roomRows.length - page * rowsPerPage);
 
@@ -136,6 +138,15 @@ function Lobby() {
                             </TableCell>
                             <TableCell style={ { width: 160 } } align="right">
                                 { row.fat }
+                            </TableCell>
+                            <TableCell style={ { width: 160 } } align="right">
+                                <Button
+                                    variant="outlined"
+                                    color="primary"
+                                    size="small"
+                                >
+                                    join
+                                </Button>
                             </TableCell>
                         </TableRow>
                     ))

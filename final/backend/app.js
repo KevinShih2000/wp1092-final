@@ -25,12 +25,10 @@ const app = express();
  * In the production environment, the frontend and backend both use the same origin
  */
 
-if (process.env.NODE_ENV === 'development') {
     app.use(cors({
         origin: true,
         credentials: true
     }));
-}
 
 app.use(bodyParser.json());
 app.use(cookieParser());
