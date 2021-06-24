@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 import AppBar from '@material-ui/core/AppBar';
+import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import Checkbox from '@material-ui/core/Checkbox';
 import CommentIcon from '@material-ui/icons/Comment';
@@ -57,32 +58,32 @@ const useStyles2 = makeStyles((theme) => ({
 
 function Users() {
     const classes = useStyles2();
-
     return (
     <>
-        <AppBar position="static" style={{ background: '#DD66EE', maxHeight: 50 }}>
-            <Toolbar>
-                <Typography variant="h6" className={classes.title}>
-                    Friends Online
-                </Typography>
-            </Toolbar>
-        </AppBar>
-        <List className={ classes.list }>
-        {friends.map((value) => {
-            const labelId = `list-label-${value}`;
-
-            return (
-            <ListItem key={value} role={undefined} button >
-                <ListItemText id={labelId} primary={value} />
-                <ListItemSecondaryAction>
-                <IconButton edge="end" aria-label="comments">
-                    <CommentIcon style={{color: '#993399'}}/>
-                </IconButton>
-                </ListItemSecondaryAction>
-            </ListItem>
-            );
-        })}
-        </List>
+        <Box boxShadow={1}>
+            <AppBar position="static" style={{ background: '#DD66EE', maxHeight: 50 }}>
+                <Toolbar>
+                    <Typography variant="h6" className={classes.title}>
+                        Friends Online
+                    </Typography>
+                </Toolbar>
+            </AppBar>
+            <List className={ classes.list }>
+            {friends.map((value) => {
+                const labelId = `list-label-${value}`;
+                return (
+                    <ListItem key={value} role={undefined} button >
+                        <ListItemText id={labelId} primary={value} />
+                        <ListItemSecondaryAction>
+                        <IconButton edge="end" aria-label="comments">
+                            <CommentIcon style={{color: '#993399'}}/>
+                        </IconButton>
+                        </ListItemSecondaryAction>
+                    </ListItem>
+                );
+            })}
+            </List>
+        </Box>
     </>
     );
 }

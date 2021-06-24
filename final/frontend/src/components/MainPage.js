@@ -6,11 +6,14 @@ import Backdrop from '@material-ui/core/Backdrop';
 import Badge from '@material-ui/core/Badge';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
+import ButtonGroup from '@material-ui/core/ButtonGroup';
 import Container from '@material-ui/core/Container';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
+import DialogContent from '@material-ui/core/DialogContent';
+import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import Divider from '@material-ui/core/Divider';
 import Drawer from '@material-ui/core/Drawer';
@@ -23,6 +26,7 @@ import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import ListSubheader from '@material-ui/core/ListSubheader';
 import Paper from '@material-ui/core/Paper';
+import TextField from '@material-ui/core/TextField';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 
@@ -40,7 +44,7 @@ import NotificationsIcon from '@material-ui/icons/Notifications';
 import PeopleIcon from '@material-ui/icons/People';
 import SettingsIcon from '@material-ui/icons/Settings';
 
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, Redirect } from 'react-router-dom';
 import clsx from 'clsx';
 import axios from 'axios';
 
@@ -121,6 +125,7 @@ const useStyles = makeStyles((theme) => ({
         flexGrow: 1,
         height: '100vh',
         overflow: 'auto',
+        backgroundColor: 'white'
     },
     container: {
         position: 'absolute',
@@ -138,16 +143,23 @@ const useStyles = makeStyles((theme) => ({
     },
     paper: {
         padding: theme.spacing(2),
+        height: '80vh',
         display: 'flex',
         overflow: 'auto',
         flexDirection: 'column',
-        backgroundColor: '#f5f5f5',
     },
     linkText: {
         color: '#efefef'
     },
     backdrop: {
         zIndex: theme.zIndex.drawer + 1
+    },
+    paperButton: {
+        marginRight: 24,
+        color: theme.palette.primary.main,
+        borderColor: theme.palette.primary.main,
+        backgroundColor: 'white',
+        borderRadius: '8px',
     },
 }));
 
@@ -156,16 +168,92 @@ function LogoutDialog({ open, handleLogout }) {
         <Dialog
             open={ open }
             onClose={ () => handleLogout(false) }
-            aria-labelledby="alert-dialog-title"
-            aria-describedby="alert-dialog-description"
+            minWidth="xl"
+            fullWidth
+            aria-labelledby='alert-dialog-title'
+            aria-describedby='alert-dialog-description'
         >
-            <DialogTitle id="alert-dialog-title">Do you really want to logout?</DialogTitle>
+            <DialogTitle id='alert-dialog-title'>Logout</DialogTitle>
+            <DialogContent>
+                <DialogContentText>
+                    Do you really want to logout?
+                </DialogContentText>
+            </DialogContent>
             <DialogActions>
-                <Button onClick={ () => handleLogout(false) } color="primary">
+                <Button onClick={ () => handleLogout(false) } color='secondary' variant="contained">
                     Stay
                 </Button>
-                <Button onClick={ () => handleLogout(true) } color="primary" autoFocus>
+                <Button onClick={ () => handleLogout(true) } color='primary' variant="contained" autoFocus>
                     Logout
+                </Button>
+            </DialogActions>
+        </Dialog>
+    );
+}
+
+function CreateRoomDialog({ open, setShowCreateRoomDialog }) {
+    const [roomName, setRoomName] = useState('');
+    const [roomId, setRoomId] = useState('');
+    const [duplicateRoomError, setDuplicateRoomError] = useState(false);
+    
+    async function handleCreateRoom(create, roomName) {
+        if (!create) {
+            setShowCreateRoomDialog(false);
+            return;
+        }
+        try {
+            const result = await instance.post('/room', { roomName: roomName }, { withCredentials: true });
+            const data = result.data;
+            if (data.status === 'success') {
+                setRoomId(data.roomId);
+            }
+        }
+        catch (error) {
+            if (error.response) {
+                const data = error.response.data;
+                if (data.status === 'failed') {
+                    if (data.reason === 'DuplicateRoomName') {
+                        setDuplicateRoomError(true);
+                    }
+                }
+            }
+        }
+    }
+
+    return (
+        roomId
+        ? <Redirect to={ '/chat?id=' + encodeURI(roomId) } />
+        : <Dialog
+            open={ open }
+            onClose={ () => handleCreateRoom(false) }
+            minWidth="lg"
+            fullWidth
+            aria-labelledby='alert-dialog-title'
+            aria-describedby='alert-dialog-description'
+        >
+            <DialogTitle id='alert-dialog-title'>Create a new room</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Please enter your room name. 
+                    </DialogContentText>
+                    <TextField
+                        autoFocus
+                        margin="dense"
+                        label="Room Name"
+                        type="text"
+                        fullWidth
+                        onChange={ (event) => setRoomName(event.target.value) }
+                        onFocus={ () => setDuplicateRoomError(false) }
+                        error={ duplicateRoomError }
+                        helperText={ duplicateRoomError && 'Duplicate room name' }
+                    />
+                </DialogContent>
+            <DialogActions>
+                <Button onClick={ () => handleCreateRoom(false) } color='secondary' variant="contained">
+                    Cancel
+                </Button>
+                <Button onClick={ () => handleCreateRoom(true, roomName) } color='primary' variant="contained" autoFocus>
+                    Create
                 </Button>
             </DialogActions>
         </Dialog>
@@ -176,7 +264,9 @@ function MainPage(props) {
     const classes = useStyles();
 
     const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+    const [showCreateRoomDialog, setShowCreateRoomDialog] = useState(false);
     const [showCircularProgress, setShowCircularProgress] = useState(false);
+    const [currentRoom, setCurrentRoom] = useState(null);
 
     const setIsLoggedIn = props.setIsLoggedIn;
     const username = props.username;
@@ -198,71 +288,73 @@ function MainPage(props) {
     return (
         <div className={classes.root}>
             <CssBaseline />
-            <AppBar position="absolute" className={ classes.appBar }>
+            <AppBar position='absolute' className={ classes.appBar }>
                 <Toolbar className={ classes.toolbar }>
-                    <Typography component="h1" variant="h6" noWrap className={ classes.title }>
+                    <Typography component='h1' variant='h6' noWrap className={ classes.title }>
                         Dashboard
                     </Typography>
-                    <Typography component="h1" variant="h6" className={ classes.username }>
+                    <Typography component='h1' variant='h6' className={ classes.username }>
                         Hi, { username }!
                     </Typography>
-                    <Link component={ RouterLink } to="/logout">
+                    <Link component={ RouterLink } to='/logout'>
                         <Button
-                            variant="outlined"
+                            variant='outlined'
                             startIcon={ <AddBoxIcon /> }
                             className={ classes.menuButton }
                             onClick={ () => setShowLogoutDialog(true) }
                         >
-                                Logout
+                            Logout
                         </Button>
                     </Link>
                 </Toolbar>
             </AppBar>
             <Drawer
-                variant="permanent"
+                variant='permanent'
                 classes={{
                     paper: classes.drawerPaper
                 }}
             >
                 <List>
-                    <Link component={ RouterLink } to="/home" className={ classes.listItem }>
+                    <Link component={ RouterLink } to='/' className={ classes.listItem }>
                         <ListItem button>
                             <ListItemIcon>
                                 <HomeIcon />
                             </ListItemIcon>
-                            <ListItemText primary="Home" />
+                            <ListItemText primary='Home' />
                         </ListItem>
                     </Link>
-                    <Link component={ RouterLink } to="/chat" className={ classes.listItem }>
-                        <ListItem button>
-                            <ListItemIcon>
-                                <ChatIcon />
-                            </ListItemIcon>
-                            <ListItemText primary="Chat" />
-                        </ListItem>
-                    </Link>
-                    <Link component={ RouterLink } to="/meeting" className={ classes.listItem }>
+                    {
+                        currentRoom !== null && <Link component={ RouterLink } to='/chat' className={ classes.listItem }>
+                            <ListItem button>
+                                <ListItemIcon>
+                                    <ChatIcon />
+                                </ListItemIcon>
+                                <ListItemText primary='Chat' />
+                            </ListItem>
+                        </Link>
+                    }
+                    <Link component={ RouterLink } to='/meeting' className={ classes.listItem }>
                         <ListItem button>
                             <ListItemIcon>
                                 <MeetingRoomIcon />
                             </ListItemIcon>
-                            <ListItemText primary="Meeting" />
+                            <ListItemText primary='Meeting' />
                         </ListItem>
                     </Link>
-                    <Link component={ RouterLink } to="/friends" className={ classes.listItem }>
+                    <Link component={ RouterLink } to='/friends' className={ classes.listItem }>
                         <ListItem button>
                             <ListItemIcon>
                                 <PeopleIcon />
                             </ListItemIcon>
-                            <ListItemText primary="Friends" />
+                            <ListItemText primary='Friends' />
                         </ListItem>
                     </Link>
-                    <Link component={ RouterLink } to="/setting" className={ classes.listItem }>
+                    <Link component={ RouterLink } to='/setting' className={ classes.listItem }>
                         <ListItem button>
                             <ListItemIcon>
                                 <SettingsIcon />
                             </ListItemIcon>
-                            <ListItemText primary="Setting" />
+                            <ListItemText primary='Setting' />
                         </ListItem>
                     </Link>
                 </List>
@@ -272,14 +364,20 @@ function MainPage(props) {
                 <Container className={ classes.container }>
                     <Grid container spacing={3}>
                         <Grid item xs={8}>
-                            <Paper className={ classes.paper }>
-                                <Lobby />
-                            </Paper>
+                            <Lobby currentRoom={ currentRoom } setCurrentRoom={ setCurrentRoom } />
                         </Grid>
                         <Grid item xs={4}>
-                            <Paper className={ classes.paper }>
-                                <Users />
-                            </Paper>
+                            <Users />
+                        </Grid>
+                        <Grid item xs={8}>
+                            <Button
+                                variant='outlined'
+                                startIcon={ <AddBoxIcon /> }
+                                className={ classes.paperButton }
+                                onClick={ () => setShowCreateRoomDialog(true) }
+                            >
+                                Create New Room
+                            </Button>
                         </Grid>
                     </Grid>
                 </Container>
@@ -288,6 +386,7 @@ function MainPage(props) {
                 <CircularProgress color='primary' className={ classes.progress } />
             </Backdrop>
             <LogoutDialog open={ showLogoutDialog } handleLogout={ handleLogout } />
+            <CreateRoomDialog open={ showCreateRoomDialog } setShowCreateRoomDialog={ setShowCreateRoomDialog } />
         </div>
     );
 }

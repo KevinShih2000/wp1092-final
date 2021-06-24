@@ -2,9 +2,11 @@ const express = require('express');
 const mongoose = require('mongoose');
 const router = express.Router();
 const bcrypt = require('bcrypt');
+const uuidv4 = require('uuid').v4;
 const jwt = require('jsonwebtoken');
 
 const User = require('../models/User');
+const Room = require('../models/Room');
 
 require('dotenv').config();
 
@@ -211,6 +213,88 @@ router.post('/logout', async (req, res, next) => {
     res.json({
         status: 'success'
     });
+});
+
+router.post('/room', async (req, res, next) => {
+
+    /* Check for empty request */
+    if (!req.body) {
+        res.status(400).json({
+            status: 'failed',
+            reason: 'EmptyBodyError'
+        });
+        return;
+    }
+
+    /* Check for cookie */
+    if (!req.cookies) {
+        res.status(400).json({
+            status: 'failed',
+            reason: 'UserNotLogin'
+        });
+        return;
+    }
+
+    try {
+        const jwtToken = req.cookies.jwt;
+        if (!jwtToken) {
+            res.status(400).json({
+                status: 'failed',
+                reason: 'UserNotLogin'
+            });
+            return;
+        }
+
+        const jwtData = await jwt.verify(jwtToken, process.env.JWT_SECRET);
+        const username = jwtData.username;
+        const roomName = req.body.roomName;
+
+        /* Check for duplicate room */
+        const duplicateRoom = await Room.findOne({ roomName: roomName });
+        if (duplicateRoom !== null) {
+            res.status(400).json({
+                status: 'failed',
+                reason: 'DuplicateRoomName'
+            });
+            return;
+        }
+
+        /* Retrieve user _id */
+        const currentUser = await User.findOne({ username: username }, { _id: 1 });
+        if (currentUser === null) {
+            res.status(400).json({
+                status: 'failed',
+                reason: 'UserNotFound'
+            });
+            return;
+        }
+
+        const roomId = uuidv4();
+
+        /* Create new room */
+        const newRoom = Room({
+            roomName: roomName,
+            roomId: roomId,
+            users: [ currentUser._id ],
+            messages: []
+        });
+        newRoom.save();
+
+        res.json({
+            status: 'success',
+            roomId: roomId
+        });
+    }
+    catch (error) {
+        if (error.name === 'JsonWebTokenError') {
+            res.status(400).json({
+                status: 'failed',
+                reason: 'InvalidJWT'
+            });
+            return;
+        }
+        console.log(error);
+    }
 });
 
 module.exports = router;
