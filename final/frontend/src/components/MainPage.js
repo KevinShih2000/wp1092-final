@@ -6,7 +6,6 @@ import Backdrop from '@material-ui/core/Backdrop';
 import Badge from '@material-ui/core/Badge';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
-import ButtonGroup from '@material-ui/core/ButtonGroup';
 import Container from '@material-ui/core/Container';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -26,7 +25,6 @@ import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import ListSubheader from '@material-ui/core/ListSubheader';
 import Paper from '@material-ui/core/Paper';
-import TextField from '@material-ui/core/TextField';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 
@@ -36,6 +34,7 @@ import AssignmentIcon from '@material-ui/icons/Assignment';
 import BarChartIcon from '@material-ui/icons/BarChart';
 import ChatIcon from '@material-ui/icons/Chat';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
+import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 import HomeIcon from '@material-ui/icons/Home';
 import LayersIcon from '@material-ui/icons/Layers';
 import MenuIcon from '@material-ui/icons/Menu';
@@ -44,15 +43,14 @@ import NotificationsIcon from '@material-ui/icons/Notifications';
 import PeopleIcon from '@material-ui/icons/People';
 import SettingsIcon from '@material-ui/icons/Settings';
 
-import { Link as RouterLink, Redirect } from 'react-router-dom';
+import { Link as RouterLink, Redirect, useLocation } from 'react-router-dom';
 import clsx from 'clsx';
 import axios from 'axios';
 
 import Lobby from './Lobby';
 import Users from './Users';
-
-const drawerWidth = '16vw';
-const remainWidth = '84vw';
+import CreateRoom from './CreateRoom';
+import ChatRoom from './ChatRoom';
 
 const instance = axios.create({
     baseURL: process.env.REACT_APP_API_BASE_URL,
@@ -75,8 +73,8 @@ const useStyles = makeStyles((theme) => ({
     },
     appBar: {
         zIndex: theme.zIndex.drawer + 1,
-        width: remainWidth,
-        left: drawerWidth,
+        width: '84vw',
+        left: '16vw',
         backgroundColor: theme.palette.primary.dark
     },
     menuButton: {
@@ -103,7 +101,7 @@ const useStyles = makeStyles((theme) => ({
     drawerPaper: {
         position: 'absolute',
         whiteSpace: 'nowrap',
-        width: drawerWidth,
+        width: '16vw',
         transition: theme.transitions.create('width', {
             easing: theme.transitions.easing.sharp,
             duration: theme.transitions.duration.enteringScreen,
@@ -129,9 +127,9 @@ const useStyles = makeStyles((theme) => ({
     },
     container: {
         position: 'absolute',
-        left: drawerWidth,
+        left: '16vw',
         right: 0,
-        width: remainWidth,
+        width: '84vw',
         paddingTop: theme.spacing(4),
         paddingBottom: theme.spacing(4),
     },
@@ -191,86 +189,18 @@ function LogoutDialog({ open, handleLogout }) {
     );
 }
 
-function CreateRoomDialog({ open, setShowCreateRoomDialog }) {
-    const [roomName, setRoomName] = useState('');
-    const [roomId, setRoomId] = useState('');
-    const [duplicateRoomError, setDuplicateRoomError] = useState(false);
-    
-    async function handleCreateRoom(create, roomName) {
-        if (!create) {
-            setShowCreateRoomDialog(false);
-            return;
-        }
-        try {
-            const result = await instance.post('/room', { roomName: roomName }, { withCredentials: true });
-            const data = result.data;
-            if (data.status === 'success') {
-                setRoomId(data.roomId);
-            }
-        }
-        catch (error) {
-            if (error.response) {
-                const data = error.response.data;
-                if (data.status === 'failed') {
-                    if (data.reason === 'DuplicateRoomName') {
-                        setDuplicateRoomError(true);
-                    }
-                }
-            }
-        }
-    }
-
-    return (
-        roomId
-        ? <Redirect to={ '/chat?id=' + encodeURI(roomId) } />
-        : <Dialog
-            open={ open }
-            onClose={ () => handleCreateRoom(false) }
-            minWidth="lg"
-            fullWidth
-            aria-labelledby='alert-dialog-title'
-            aria-describedby='alert-dialog-description'
-        >
-            <DialogTitle id='alert-dialog-title'>Create a new room</DialogTitle>
-                <DialogContent>
-                    <DialogContentText>
-                        Please enter your room name. 
-                    </DialogContentText>
-                    <TextField
-                        autoFocus
-                        margin="dense"
-                        label="Room Name"
-                        type="text"
-                        fullWidth
-                        onChange={ (event) => setRoomName(event.target.value) }
-                        onFocus={ () => setDuplicateRoomError(false) }
-                        error={ duplicateRoomError }
-                        helperText={ duplicateRoomError && 'Duplicate room name' }
-                    />
-                </DialogContent>
-            <DialogActions>
-                <Button onClick={ () => handleCreateRoom(false) } color='secondary' variant="contained">
-                    Cancel
-                </Button>
-                <Button onClick={ () => handleCreateRoom(true, roomName) } color='primary' variant="contained" autoFocus>
-                    Create
-                </Button>
-            </DialogActions>
-        </Dialog>
-    );
-}
-
 function MainPage(props) {
     const classes = useStyles();
 
     const [showLogoutDialog, setShowLogoutDialog] = useState(false);
-    const [showCreateRoomDialog, setShowCreateRoomDialog] = useState(false);
     const [showCircularProgress, setShowCircularProgress] = useState(false);
     const [currentRoom, setCurrentRoom] = useState(null);
 
     const setIsLoggedIn = props.setIsLoggedIn;
     const username = props.username;
     const setUsername = props.setUsername;
+
+    const loc = useLocation();
 
     async function handleLogout(logout) {
         setShowLogoutDialog(false);
@@ -296,16 +226,14 @@ function MainPage(props) {
                     <Typography component='h1' variant='h6' className={ classes.username }>
                         Hi, { username }!
                     </Typography>
-                    <Link component={ RouterLink } to='/logout'>
-                        <Button
-                            variant='outlined'
-                            startIcon={ <AddBoxIcon /> }
-                            className={ classes.menuButton }
-                            onClick={ () => setShowLogoutDialog(true) }
-                        >
-                            Logout
-                        </Button>
-                    </Link>
+                    <Button
+                        variant='outlined'
+                        startIcon={ <ExitToAppIcon /> }
+                        className={ classes.menuButton }
+                        onClick={ () => setShowLogoutDialog(true) }
+                    >
+                        Logout
+                    </Button>
                 </Toolbar>
             </AppBar>
             <Drawer
@@ -315,7 +243,7 @@ function MainPage(props) {
                 }}
             >
                 <List>
-                    <Link component={ RouterLink } to='/' className={ classes.listItem }>
+                    <Link component={ RouterLink } to='/home' className={ classes.listItem }>
                         <ListItem button>
                             <ListItemIcon>
                                 <HomeIcon />
@@ -324,7 +252,7 @@ function MainPage(props) {
                         </ListItem>
                     </Link>
                     {
-                        currentRoom !== null && <Link component={ RouterLink } to='/chat' className={ classes.listItem }>
+                        currentRoom === null && <Link component={ RouterLink } to='/chat' className={ classes.listItem }>
                             <ListItem button>
                                 <ListItemIcon>
                                     <ChatIcon />
@@ -333,14 +261,16 @@ function MainPage(props) {
                             </ListItem>
                         </Link>
                     }
-                    <Link component={ RouterLink } to='/meeting' className={ classes.listItem }>
-                        <ListItem button>
-                            <ListItemIcon>
-                                <MeetingRoomIcon />
-                            </ListItemIcon>
-                            <ListItemText primary='Meeting' />
-                        </ListItem>
-                    </Link>
+                    {
+                        currentRoom !== null && <Link component={ RouterLink } to={ '/room?id=' + encodeURI(currentRoom.roomId) } className={ classes.listItem }>
+                            <ListItem button>
+                                <ListItemIcon>
+                                    <MeetingRoomIcon />
+                                </ListItemIcon>
+                                <ListItemText primary='Chat Room' />
+                            </ListItem>
+                        </Link>
+                    }
                     <Link component={ RouterLink } to='/friends' className={ classes.listItem }>
                         <ListItem button>
                             <ListItemIcon>
@@ -361,32 +291,41 @@ function MainPage(props) {
             </Drawer>
             <main className={ classes.content }>
                 <div className={ classes.appBarSpacer } />
-                <Container className={ classes.container }>
-                    <Grid container spacing={3}>
-                        <Grid item xs={8}>
-                            <Lobby currentRoom={ currentRoom } setCurrentRoom={ setCurrentRoom } />
+                {
+                    loc.pathname === '/chat'
+                    ?  <Container className={ classes.container }>
+                        <Grid container spacing={3}>
+                            <Grid item xs={12}>
+                                <CreateRoom setCurrentRoom={ setCurrentRoom } />
+                            </Grid>
                         </Grid>
-                        <Grid item xs={4}>
-                            <Users />
+                    </Container>
+
+                    : loc.pathname === '/room'
+                    ? <Container className={ classes.container }>
+                        <Grid container spacing={3}>
+                            <Grid item xs={12}>
+                                <ChatRoom />
+                            </Grid>
                         </Grid>
-                        <Grid item xs={8}>
-                            <Button
-                                variant='outlined'
-                                startIcon={ <AddBoxIcon /> }
-                                className={ classes.paperButton }
-                                onClick={ () => setShowCreateRoomDialog(true) }
-                            >
-                                Create New Room
-                            </Button>
+                    </Container>
+
+                    : <Container className={ classes.container }>
+                        <Grid container spacing={3}>
+                            <Grid item xs={8}>
+                                <Lobby currentRoom={ currentRoom } setCurrentRoom={ setCurrentRoom } />
+                            </Grid>
+                            <Grid item xs={4}>
+                                <Users />
+                            </Grid>
                         </Grid>
-                    </Grid>
-                </Container>
+                    </Container>
+                }
             </main>
             <Backdrop className={ classes.backdrop } open={ showCircularProgress }>
                 <CircularProgress color='primary' className={ classes.progress } />
             </Backdrop>
             <LogoutDialog open={ showLogoutDialog } handleLogout={ handleLogout } />
-            <CreateRoomDialog open={ showCreateRoomDialog } setShowCreateRoomDialog={ setShowCreateRoomDialog } />
         </div>
     );
 }

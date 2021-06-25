@@ -1,8 +1,12 @@
 import { useState } from 'react';
+import { Redirect } from 'react-router-dom';
+
 import PropTypes from 'prop-types';
 import Backdrop from '@material-ui/core/Backdrop';
 import Button from '@material-ui/core/Button';
 import CircularProgress from '@material-ui/core/CircularProgress';
+import Paper from '@material-ui/core/Paper';
+import Snackbar from '@material-ui/core/Snackbar';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
@@ -12,12 +16,14 @@ import TableHead from '@material-ui/core/TableHead';
 import TablePagination from '@material-ui/core/TablePagination';
 import TableRow from '@material-ui/core/TableRow';
 import Typography from '@material-ui/core/Typography';
-import Paper from '@material-ui/core/Paper';
 import IconButton from '@material-ui/core/IconButton';
+
 import FirstPageIcon from '@material-ui/icons/FirstPage';
 import KeyboardArrowLeft from '@material-ui/icons/KeyboardArrowLeft';
 import KeyboardArrowRight from '@material-ui/icons/KeyboardArrowRight';
 import LastPageIcon from '@material-ui/icons/LastPage';
+
+import MuiAlert from '@material-ui/lab/Alert';
 
 import { makeStyles, useTheme } from '@material-ui/core/styles';
 
@@ -29,6 +35,11 @@ const useStyles1 = makeStyles((theme) => ({
         marginLeft: theme.spacing(2.5),
     },
 }));
+
+function Alert(props) {
+    return <MuiAlert elevation={6} variant="filled" {...props} />;
+}
+
 
 function TablePaginationActions(props) {
     const classes = useStyles1();
@@ -128,7 +139,10 @@ const instance = axios.create({
 function Lobby({ currentRoom, setCurrentRoom }) {
     const classes = useStyles2();
     const [page, setPage] = useState(0);
+    const [roomId, setRoomId] = useState('');
     const [showCircularProgress, setShowCircularProgress] = useState(false);
+    const [showJoinRoomError, setShowJoinRoomError] = useState(false);
+    const [joinRoomErrorMessage, setJoinRoomErrorMessage] = useState('');
     const rowsPerPage = 5;
 
     const emptyRows = rowsPerPage - Math.min(rowsPerPage, roomRows.length - page * rowsPerPage);
@@ -137,18 +151,64 @@ function Lobby({ currentRoom, setCurrentRoom }) {
         setPage(newPage);
     };
 
-    const joinRoom = async (roomName) => {
-        setCurrentRoom(roomName);
+    function handleCloseErrorMessage() {
+        setShowJoinRoomError(false);
+        setJoinRoomErrorMessage('');
+    }
+
+    async function joinRoom(roomName) {
         setShowCircularProgress(true);
-        const result = await instance.post('/room', null, { withCredentials: true });
-        const data = result.data;
-        setShowCircularProgress(false);
-        if (data.status === 'success') {
+        try {
+            const result = await instance.post('/joinRoom', { roomName }, { withCredentials: true });
+            const data = result.data;
+            setShowCircularProgress(false);
+            if (data.status === 'success') {
+                setCurrentRoom({ roomName: roomName, roomId: data.roomId });
+                setRoomId(data.roomId);
+            }
+        }
+        catch (error) {
+            if (error.message === 'Network Error') {
+                setShowJoinRoomError(true);
+                setJoinRoomErrorMessage('Backend is unreachable. Please contact the administrator.');
+            }
+            else if (/^timeout of [0-9]+ms exceeded$/.test(error.message)) {
+                setShowJoinRoomError(true);
+                setJoinRoomErrorMessage('Connection Timeout. Please contact the administrator.');
+            }
+            else if (error.response) {
+                const data = error.response.data;
+                if (data.status === 'failed') {
+                    if (data.reason === 'RoomNameNotFound') {
+                        setShowJoinRoomError(true);
+                        setJoinRoomErrorMessage('Invalid room name.');
+                    }
+                    else if (data.reason === 'DatabaseFailedError') {
+                        setShowJoinRoomError(true);
+                        setJoinRoomErrorMessage('Database error. Please contact the administrator.');
+                    }
+                    else if (data.reason === 'EmptyBodyError' || data.reason === 'TypeError') {
+                        setShowJoinRoomError(true);
+                        setJoinRoomErrorMessage('Invalid response.');
+                    }
+                }
+                else {
+                    setShowJoinRoomError(true);
+                    setJoinRoomErrorMessage('Unknown error. Please contact the administrator.');
+                }
+            }
+            else {
+                setShowJoinRoomError(true);
+                setJoinRoomErrorMessage('Unknown error. Please contact the administrator.');
+            }
+            setShowCircularProgress(false);
         }
     }
 
     return (
-        <>
+        roomId
+        ? <Redirect to={ '/room?id=' + encodeURI(roomId) } />
+        : <>
             <TableContainer component={ Paper }>
                 <Table className={ classes.table } aria-label='custom pagination table'>
                     <TableHead>
@@ -228,6 +288,13 @@ function Lobby({ currentRoom, setCurrentRoom }) {
             <Backdrop className={ classes.backdrop } open={ showCircularProgress }>
                 <CircularProgress color='primary' className={ classes.progress } />
             </Backdrop>
+            <Snackbar open={ showJoinRoomError } autoHideDuration={ 6000 } onClose={ handleCloseErrorMessage }>
+                <Alert onClose={ handleCloseErrorMessage } severity='error'>
+                {
+                    joinRoomErrorMessage
+                }
+                </Alert>
+            </Snackbar>
         </>
     );
 }

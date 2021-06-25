@@ -144,7 +144,7 @@ function LoginPage(props) {
 
     return (
         redirectToMainPage
-        ? <Redirect to='/' />
+        ? <Redirect to='/home' />
         : <Container component='main' maxWidth='xs'>
             <CssBaseline />
             <div className={ classes.paper }>
