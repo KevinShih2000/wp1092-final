@@ -6,8 +6,9 @@ const roomSchema = new mongoose.Schema({
     roomPassword: String,
     users: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     messages: [{
-        name: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-        message: String
+        user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        message: String,
+        timestamp: String
     }]
 });
 

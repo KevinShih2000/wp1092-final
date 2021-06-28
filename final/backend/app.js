@@ -3,6 +3,8 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
+const http = require('http');
+const socketio = require('socket.io');
 
 /* The main api router is in `routes/api.js' */
 
@@ -19,20 +21,28 @@ db.once('open', () => console.log('Mongodb connected'));
 /* Setup the express server */
 
 const app = express();
+const httpServer = http.createServer(app);
+const io = socketio(httpServer, {
+    cors: {
+        origin: '*',
+        credentials: true
+    }
+});
 
 /*
  * The cors middleware is used for development testing purpose
  * In the production environment, the frontend and backend both use the same origin
  */
 
-    app.use(cors({
-        origin: true,
-        credentials: true
-    }));
+app.use(cors({
+    origin: true,
+    credentials: true
+}));
 
 app.use(bodyParser.json());
 app.use(cookieParser());
 app.use('/api', apiRouter);
+app.set('socketio', io);
 
 /*
  * The following middleware prevents the server from sending back overly detailed error message
@@ -51,8 +61,7 @@ app.use((err, req, res, next) => {
     }
 });
 
-/* Start the backend express server */
 const port = process.env.PORT;
-app.listen(port, () => {
+httpServer.listen(port, () => {
     console.log(`Server is listening on port ${port}`);
 })

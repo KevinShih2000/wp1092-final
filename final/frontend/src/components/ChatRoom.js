@@ -1,3 +1,4 @@
+import { useEffect, useState, useRef } from 'react';
 import { Paper } from '@material-ui/core';
 import { createStyles, makeStyles, Theme } from '@material-ui/core/styles';
 
@@ -7,7 +8,18 @@ import TextField from '@material-ui/core/TextField';
 
 import SendIcon from '@material-ui/icons/Send';
 
-import { deepOrange } from '@material-ui/core/colors';
+import axios from 'axios';
+import { io } from 'socket.io-client';
+import { useSnackbar } from 'notistack';
+
+function createData(name, avatar, message, timestamp) {
+    return { name, avatar, message, timestamp};
+}
+
+const instance = axios.create({
+    baseURL: process.env.REACT_APP_API_BASE_URL,
+    timeout: 60000
+});
 
 const useStylesTextInput = makeStyles((theme) =>
     createStyles({
@@ -23,8 +35,14 @@ const useStylesTextInput = makeStyles((theme) =>
     })
 );
 
-function TextInput() {
+function TextInput({ roomName }) {
     const classes = useStylesTextInput();
+    const [currMessage, setCurrMessage] = useState('');
+    
+    async function handleSendMessage() {
+        const result = await instance.post('/send', { roomName: roomName, message: currMessage }, { withCredentials: true });
+    }
+
     return (
         <>
             <form className={ classes.container } noValidate autoComplete='off'>
@@ -32,8 +50,12 @@ function TextInput() {
                 id='standard-text'
                 label='Aa'
                 className={ classes.text }
+                onChange={ (event) => setCurrMessage(event.target.value) }
             />
-            <IconButton color='primary'>
+            <IconButton
+                color='primary'
+                onClick={ handleSendMessage }
+            >
                 <SendIcon />
             </IconButton>
             </form>
@@ -72,7 +94,6 @@ const useStyleMessage = makeStyles((theme) =>
             borderRadius: '10px',
         },
         messageContent: {
-            padding: 0,
             margin: 0,
             overflowWrap: 'break-word'
         },
@@ -95,20 +116,19 @@ const useStyleMessage = makeStyles((theme) =>
     })
 );
 
-function Message({ message, timestamp, image, username, direction }) {
+function Message({ message, timestamp, avatar, name, direction }) {
     const classes = useStyleMessage();
-
     if (direction === 'left') {
         return (
             <>
                 <div className={ classes.messageRowLeft }>
                     <Avatar
-                        alt={ username }
+                        alt={ name }
                         className={ classes.avatar }
-                        src={ image }
+                        src={ avatar }
                     ></Avatar>
                     <div>
-                        <div className={ classes.displayName }>{ username }</div>
+                        <div className={ classes.displayName }>{ name }</div>
                         <div className={ classes.messageLeft }>
                             <div>
                                 <p className={ classes.messageContent }>{ message }</p>
@@ -150,6 +170,8 @@ const useStylesChatRoom = makeStyles((theme) =>
             flexDirection: 'column',
             position: 'relative',
             width: '75%',
+            overflow: 'auto',
+            maxHeight: '80vh'
         },
         container: {
             width: '100%',
@@ -165,35 +187,79 @@ const useStylesChatRoom = makeStyles((theme) =>
     })
 );
 
-function ChatRoom() {
+function ChatRoom({ currentRoom, username }) {
     const classes = useStylesChatRoom();
+    const [messages, setMessages] = useState([]);
+    const [currMessage, setCurrMessage] = useState('');
+    const [newMessage, setNewMessage] = useState(null);
+    const [ws, setWs] = useState(null);
+    const scrollRef = useRef(null);
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    useEffect(async () => {
+        const result = await instance.post('/messages', { roomName: currentRoom.roomName }, { withCredentials: true });
+        const data = result.data;
+        if (data.status === 'success') {
+            const messages = data.messages;
+            setMessages(messages);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (ws) {
+            return;
+        }
+        const socket = io(process.env.REACT_APP_BACKEND_BASE_URL);
+        socket.on('newMessage', (newMessage) => {
+            setNewMessage(newMessage);
+        });
+        setWs(socket);
+        return () => {
+            if (ws) {
+                ws.disconnect();
+            }
+        }
+    }, [ws]);
+
+    useEffect(() => {
+        if (newMessage) {
+            let origMessages = [...messages];
+            origMessages.push(newMessage);
+            setMessages(origMessages);
+            if (newMessage.name !== username) {
+                enqueueSnackbar(`${newMessage.name}: ${newMessage.message}`, { variant: 'success' });
+            }
+        }
+    }, [newMessage])
+
+    useEffect(() => {
+        if (scrollRef) {
+            scrollRef.current.scrollIntoView({ behaviour: 'smooth' });
+        }
+    }, [messages]);
+
     return (
         <div className={ classes.container }>
             <Paper className={ classes.paper }>
                 <Paper className={ classes.messagesBody }>
-                    <Message
-                        message='空露露'
-                        timestamp={ new Date().toLocaleString() }
-                        image='https://static.wikia.nocookie.net/virtualyoutuber/images/d/dd/Suzuhara_Lulu_Portrait.png'
-                        username='鈴原るる'
-                        direction='left'
-                    />
-                    <Message
-                        message='他一定是喜歡我啦'
-                        timestamp={ new Date().toLocaleString() }
-                        image='https://static.wikia.nocookie.net/virtualyoutuber/images/2/29/Ange_Katrina_Portrait.png'
-                        username='アンジュ・カトリーナ'
-                        direction='left'
-                    />
-                    <Message
-                        message='AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
-                        timestamp={ new Date().toLocaleString() }
-                        image='https://img.moegirl.org.cn/common/d/da/Motoaki_Tanigo.jpg'
-                        username='yagoo'
-                        direction='right'
-                    />
+                {
+                    messages.map(message => {
+                        return (
+                            <Message
+                                key={ message.timestamp }
+                                name={ message.name }
+                                avatar={ message.avatar }
+                                message={ message.message }
+                                timestamp={ message.timestamp }
+                                direction={ message.name === username ? 'right' : 'left' }
+                            />
+                        )
+                    })
+                }
+                <div style={{ float:"left", clear: "both" }} ref={ scrollRef }>
+                </div>
                 </Paper>
-                <TextInput />
+                <TextInput roomName={ currentRoom === null ? '' : currentRoom.roomName } />
             </Paper>
         </div>
     );

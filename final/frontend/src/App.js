@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Switch, Route, Redirect } from 'react-router-dom';
 import axios from 'axios';
+import { SnackbarProvider } from "notistack";
 
 import './App.css';
 
@@ -8,6 +9,7 @@ import LandingPage from './components/LandingPage';
 import MainPage from './components/MainPage';
 import SignupPage from './components/SignupPage';
 import LoginPage from './components/LoginPage';
+
 
 const instance = axios.create({
     baseURL: process.env.REACT_APP_API_BASE_URL,
@@ -31,7 +33,7 @@ function App() {
     }, []);
 
     return (
-        <>
+        <SnackbarProvider hideIconVariant>
         {
             isLoggedIn
             ? <Switch>
@@ -60,7 +62,7 @@ function App() {
                 </Route>
             </Switch>
         }
-        </>
+        </SnackbarProvider>
     );
 }
 

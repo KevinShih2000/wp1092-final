@@ -52,6 +52,7 @@ import Users from './Users';
 import Friends from './Friends'
 import FriendsOnline from './FriendsOnline'
 import CreateRoom from './CreateRoom';
+import CreateJoinRoom from './CreateJoinRoom';
 import ChatRoom from './ChatRoom';
 
 const instance = axios.create({
@@ -75,8 +76,8 @@ const useStyles = makeStyles((theme) => ({
     },
     appBar: {
         zIndex: theme.zIndex.drawer + 1,
-        width: '84vw',
-        left: '16vw',
+        width: 'calc(100% - 240px)',
+        left: '240px',
         backgroundColor: theme.palette.primary.dark
     },
     menuButton: {
@@ -103,7 +104,7 @@ const useStyles = makeStyles((theme) => ({
     drawerPaper: {
         position: 'absolute',
         whiteSpace: 'nowrap',
-        width: '16vw',
+        width: '240px',
         transition: theme.transitions.create('width', {
             easing: theme.transitions.easing.sharp,
             duration: theme.transitions.duration.enteringScreen,
@@ -129,9 +130,9 @@ const useStyles = makeStyles((theme) => ({
     },
     container: {
         position: 'absolute',
-        left: '16vw',
+        left: '240px',
         right: 0,
-        width: '84vw',
+        width: 'calc(100% - 240px)',
         paddingTop: theme.spacing(4),
         paddingBottom: theme.spacing(4),
     },
@@ -298,7 +299,7 @@ function MainPage(props) {
                     ?  <Container className={ classes.container }>
                         <Grid container spacing={3}>
                             <Grid item xs={12}>
-                                <CreateRoom setCurrentRoom={ setCurrentRoom } />
+                                <CreateJoinRoom setCurrentRoom={ setCurrentRoom } />
                             </Grid>
                         </Grid>
                     </Container>
@@ -307,7 +308,9 @@ function MainPage(props) {
                     ? <Container className={ classes.container }>
                         <Grid container spacing={3}>
                             <Grid item xs={12}>
-                                <ChatRoom />
+                                {
+                                    currentRoom && username && <ChatRoom username={ username } currentRoom={ currentRoom } />
+                                }
                             </Grid>
                         </Grid>
                     </Container>

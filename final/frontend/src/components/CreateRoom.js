@@ -47,7 +47,7 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-function CreateRoom({ setCurrentRoom }) {
+function CreateJoinRoom({ setCurrentRoom }) {
     const classes = useStyles();
 
     const [roomName, setRoomName] = useState('');
@@ -127,9 +127,6 @@ function CreateRoom({ setCurrentRoom }) {
                 else if (data.roomId) {
                     setRoomId(data.roomId);
                     setCurrentRoom({ roomName: roomName, roomId: data.roomId })
-                    setShowJoinRoomDialog(false);
-                    setRoomName('');
-                    setRoomPassword('');
                 }
                 else {
                     setShowJoinRoomDialog(false);
@@ -339,4 +336,4 @@ function CreateRoom({ setCurrentRoom }) {
     );
 }
 
-export default CreateRoom;
+export default CreateJoinRoom;
