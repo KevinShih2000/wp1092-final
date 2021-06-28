@@ -483,4 +483,51 @@ router.post('/joinRoom', async (req, res, next) => {
     }
 });
 
+router.post('/friends/search', async (req, res, next) => {
+    /* Check for empty request */
+    if (!req.body) {
+        res.status(400).json({
+            status: 'failed',
+            reason: 'EmptyBodyError'
+        }); return;
+    }
+
+    /* Check the type of username and password */
+    const username = req.body.user;
+    if (typeof username !== 'string') {
+        res.status(400).json({
+            status: 'failed',
+            reason: 'TypeError'
+        });
+        return;
+    }
+
+    /* Check for duplicate user */
+    try {
+        const rawdata = await User.find();
+        const result = rawdata.filter(e => e.username.includes(username))
+        if (result !== null) {
+            res.json({
+                status: 'success',
+                body: result,
+            });
+            return;
+        }
+        else{
+            res.json({
+                status: 'not found',
+            });
+            return;
+        }
+
+    }
+    catch (error) {
+        res.status(400).json({
+            status: 'failed',
+            reason: 'DatabaseFailedError'
+        });
+        return;
+    }
+});
+
 module.exports = router;

@@ -49,6 +49,8 @@ import axios from 'axios';
 
 import Lobby from './Lobby';
 import Users from './Users';
+import Friends from './Friends'
+import FriendsOnline from './FriendsOnline'
 import CreateRoom from './CreateRoom';
 import ChatRoom from './ChatRoom';
 
@@ -310,13 +312,25 @@ function MainPage(props) {
                         </Grid>
                     </Container>
 
+                    : loc.pathname === '/friends'
+                    ? <Container className={ classes.container }>
+                        <Grid container spacing={3}>
+                            <Grid item xs={6}>
+                                <Users />
+                            </Grid>
+                            <Grid item xs={6}>
+                                <Friends />
+                            </Grid>
+                        </Grid>
+                    </Container>
+
                     : <Container className={ classes.container }>
                         <Grid container spacing={3}>
                             <Grid item xs={8}>
                                 <Lobby currentRoom={ currentRoom } setCurrentRoom={ setCurrentRoom } />
                             </Grid>
                             <Grid item xs={4}>
-                                <Users />
+                                <FriendsOnline />
                             </Grid>
                         </Grid>
                     </Container>
