@@ -315,10 +315,10 @@ function MainPage(props) {
                     : loc.pathname === '/friends'
                     ? <Container className={ classes.container }>
                         <Grid container spacing={3}>
-                            <Grid item xs={6}>
+                            <Grid item xs={7}>
                                 <Users />
                             </Grid>
-                            <Grid item xs={6}>
+                            <Grid item xs={5}>
                                 <Friends />
                             </Grid>
                         </Grid>

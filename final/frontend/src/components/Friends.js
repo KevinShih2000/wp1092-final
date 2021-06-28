@@ -64,7 +64,7 @@ function Friends() {
             <AppBar position="static" style={{ background: '#DD66EE', maxHeight: 50 }}>
                 <Toolbar>
                     <Typography variant="h6" className={classes.title}>
-                        Friends Online
+                        Friends
                     </Typography>
                 </Toolbar>
             </AppBar>
@@ -75,6 +75,13 @@ function Friends() {
                     <ListItem key={value} role={undefined} button >
                         <ListItemText id={labelId} primary={value} />
                         <ListItemSecondaryAction>
+                        <Button
+                            variant='outlined'
+                            color='secondary'
+                            size='small'
+                        >
+                            unfollow
+                        </Button>
                         <IconButton edge="end" aria-label="comments">
                             <CommentIcon style={{color: '#993399'}}/>
                         </IconButton>
