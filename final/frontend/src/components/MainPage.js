@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 
 import AppBar from '@material-ui/core/AppBar';
@@ -52,7 +52,7 @@ import Users from './Users';
 import Friends from './Friends'
 import FriendsOnline from './FriendsOnline'
 import CreateRoom from './CreateRoom';
-import CreateJoinRoom from './CreateJoinRoom';
+//import CreateJoinRoom from './CreateJoinRoom';
 import ChatRoom from './ChatRoom';
 
 const instance = axios.create({
@@ -198,12 +198,27 @@ function MainPage(props) {
     const [showLogoutDialog, setShowLogoutDialog] = useState(false);
     const [showCircularProgress, setShowCircularProgress] = useState(false);
     const [currentRoom, setCurrentRoom] = useState(null);
+    const [myfriends, setmyfriends] = useState([]);
 
     const setIsLoggedIn = props.setIsLoggedIn;
     const username = props.username;
     const setUsername = props.setUsername;
 
     const loc = useLocation();
+
+    useEffect(() => {
+        if(myfriends.length === 0){
+            getfriends();
+        }
+    })
+
+    async function getfriends() {
+        const friendsdata = await instance.post('/friends/get', { user: username }, { withCredentials: true });
+        console.log(friendsdata)
+        if (friendsdata.data.status === 'success') {
+            setmyfriends(friendsdata.data.body);
+        }
+    }
 
     async function handleLogout(logout) {
         setShowLogoutDialog(false);
@@ -299,7 +314,7 @@ function MainPage(props) {
                     ?  <Container className={ classes.container }>
                         <Grid container spacing={3}>
                             <Grid item xs={12}>
-                                <CreateJoinRoom setCurrentRoom={ setCurrentRoom } />
+                                <CreateRoom setCurrentRoom={ setCurrentRoom } />
                             </Grid>
                         </Grid>
                     </Container>
@@ -319,10 +334,20 @@ function MainPage(props) {
                     ? <Container className={ classes.container }>
                         <Grid container spacing={3}>
                             <Grid item xs={7}>
-                                <Users />
+                                <Users 
+                                    instance={instance}
+                                    username={username}
+                                    myfriends={myfriends}
+                                    setmyfriends={setmyfriends}
+                                />
                             </Grid>
                             <Grid item xs={5}>
-                                <Friends />
+                                <Friends 
+                                    instance={instance}
+                                    username={username}
+                                    myfriends={myfriends}
+                                    setmyfriends={setmyfriends}
+                                />
                             </Grid>
                         </Grid>
                     </Container>
@@ -333,7 +358,12 @@ function MainPage(props) {
                                 <Lobby currentRoom={ currentRoom } setCurrentRoom={ setCurrentRoom } />
                             </Grid>
                             <Grid item xs={4}>
-                                <FriendsOnline />
+                                <FriendsOnline
+                                    instance={instance}
+                                    username={username}
+                                    myfriends={myfriends}
+                                    setmyfriends={setmyfriends}
+                                />
                             </Grid>
                         </Grid>
                     </Container>

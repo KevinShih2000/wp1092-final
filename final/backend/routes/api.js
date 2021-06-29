@@ -165,6 +165,8 @@ router.post('/signup', async (req, res, next) => {
         await User.create({
             username: username,
             password: bcryptPasswordHash,
+            status: false,
+            friends: [],
             avatar: ''
         });
 
@@ -747,7 +749,7 @@ router.post('/friends/search', async (req, res, next) => {
         }); return;
     }
 
-    /* Check the type of username and password */
+    /* Check the type of username */
     const username = req.body.user;
     if (typeof username !== 'string') {
         res.status(400).json({
@@ -757,11 +759,180 @@ router.post('/friends/search', async (req, res, next) => {
         return;
     }
 
-    /* Check for duplicate user */
+    /* Find user */
     try {
         const rawdata = await User.find();
         const result = rawdata.filter(e => e.username.includes(username))
         if (result !== null) {
+            res.json({
+                status: 'success',
+                body: result,
+            });
+            return;
+        }
+        else{
+            res.json({
+                status: 'not found',
+            });
+            return;
+        }
+
+    }
+    catch (error) {
+        res.status(400).json({
+            status: 'failed',
+            reason: 'DatabaseFailedError'
+        });
+        return;
+    }
+});
+
+router.post('/friends/follow', async (req, res, next) => {
+    /* Check for empty request */
+    if (!req.body) {
+        res.status(400).json({
+            status: 'failed',
+            reason: 'EmptyBodyError'
+        }); return;
+    }
+
+    const username = req.body.user;
+    const friend = req.body.friend;
+    //console.log(username, friend)
+
+    /* Check the type of username */
+    if (typeof username !== 'string') {
+        res.status(400).json({
+            status: 'failed',
+            reason: 'TypeError'
+        });
+        return;
+    }
+    
+    /* Find user */
+    try {
+        const rawdata = await User.findOne({username: username}).populate('friends').exec();
+        const newfriend = await User.findOne({username: friend});
+        const updatefriend = [...rawdata.friends, newfriend]
+        await User.updateOne({username: username}, {friends: updatefriend})
+        //console.log(await User.findOne({username: username}))
+        const result = updatefriend.map(f => {
+            return([f.username, f.status])
+        })
+
+        console.log("follow", result)
+        if (result.length !== 0) {
+            res.json({
+                status: 'success',
+                body: result,
+            });
+            return;
+        }
+        else{
+            res.json({
+                status: 'not found',
+            });
+            return;
+        }
+
+    }
+    catch (error) {
+        res.status(400).json({
+            status: 'failed',
+            reason: 'DatabaseFailedError'
+        });
+        return;
+    }
+});
+
+router.post('/friends/unfollow', async (req, res, next) => {
+    /* Check for empty request */   
+    if (!req.body) {
+        res.status(400).json({
+            status: 'failed',
+            reason: 'EmptyBodyError'
+        }); return;
+    }
+
+    const username = req.body.user;
+    const friend = req.body.friend;
+
+    /* Check user name */
+    if (typeof username !== 'string') {
+        res.status(400).json({
+            status: 'failed',
+            reason: 'TypeError'
+        });
+        return;
+    }
+    
+    /* Find user */
+    try {
+        const rawdata = await User.findOne({username: username}).populate('friends').exec();
+        const updatefriend = [...rawdata.friends];
+        updatefriend.splice(updatefriend.findIndex(f => f.username === friend), 1)
+        console.log("u", updatefriend)
+        await User.updateOne({username: username}, {friends: updatefriend})
+        //console.log(await User.findOne({username: username}))
+        const result = updatefriend.map( f => {
+            return([f.username, f.status])
+        })
+
+        console.log(result)
+        if (result.length !== 0) {
+            res.json({
+                status: 'success',
+                body: result,
+            });
+            return;
+        }
+        else{
+            res.json({
+                status: 'not found',
+            });
+            return;
+        }
+
+    }
+    catch (error) {
+        res.status(400).json({
+            status: 'failed',
+            reason: 'DatabaseFailedError'
+        });
+        return;
+    }
+});
+
+router.post('/friends/get', async (req, res, next) => {
+    /* Check for empty request */   
+    if (!req.body) {
+        res.status(400).json({
+            status: 'failed',
+            reason: 'EmptyBodyError'
+        }); return;
+    }
+
+    const username = req.body.user;
+
+    /* Check user name */
+    if (typeof username !== 'string') {
+        res.status(400).json({
+            status: 'failed',
+            reason: 'TypeError'
+        });
+        return;
+    }
+    
+    /* Find user */
+    try {
+        const rawdata = await User.findOne({username: username}).populate('friends').exec();
+        const newfriends = [...rawdata.friends];
+        const result = newfriends.map( f => {
+            return([f.username, f.status])
+        })
+
+        console.log("get", result)
+        if (result.length !== 0) {
             res.json({
                 status: 'success',
                 body: result,
