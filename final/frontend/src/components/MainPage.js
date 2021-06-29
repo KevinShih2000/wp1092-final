@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 
 import AppBar from '@material-ui/core/AppBar';
@@ -51,11 +51,9 @@ import Lobby from './Lobby';
 import Users from './Users';
 import Friends from './Friends'
 import FriendsOnline from './FriendsOnline'
-import CreateRoom from './CreateRoom';
-import CreateJoinRoom from './CreateJoinRoom';
 import ChatRoom from './ChatRoom';
-
-import SettingTest from './SettingTest';
+import CreateJoinRoom from './CreateJoinRoom';
+import Setting from './Setting';
 
 const instance = axios.create({
     baseURL: process.env.REACT_APP_API_BASE_URL,
@@ -194,12 +192,19 @@ function LogoutDialog({ open, handleLogout }) {
     );
 }
 
+function RedirectToHome({ setRedirectBackToHome }) {
+    setRedirectBackToHome(false);
+    return <Redirect to='/home' />;
+}
+
 function MainPage(props) {
     const classes = useStyles();
 
     const [showLogoutDialog, setShowLogoutDialog] = useState(false);
     const [showCircularProgress, setShowCircularProgress] = useState(false);
     const [currentRoom, setCurrentRoom] = useState(null);
+    const [redirectBackToHome, setRedirectBackToHome] = useState(false);
+    const [myfriends, setmyfriends] = useState([]);
 
     const setIsLoggedIn = props.setIsLoggedIn;
     const username = props.username;
@@ -208,6 +213,20 @@ function MainPage(props) {
     const setAvatar = props.setAvatar;
 
     const loc = useLocation();
+
+    useEffect(() => {
+        if(myfriends.length === 0){
+            getfriends();
+        }
+    })
+
+    async function getfriends() {
+        const friendsdata = await instance.post('/friends/get', { user: username }, { withCredentials: true });
+        console.log(friendsdata)
+        if (friendsdata.data.status === 'success') {
+            setmyfriends(friendsdata.data.body);
+        }
+    }
 
     async function handleLogout(logout) {
         setShowLogoutDialog(false);
@@ -294,14 +313,6 @@ function MainPage(props) {
                             <ListItemText primary='Setting' />
                         </ListItem>
                     </Link>
-                    <Link component={ RouterLink } to='/settingTest' className={ classes.listItem }>
-                        <ListItem button>
-                            <ListItemIcon>
-                                <SettingsIcon />
-                            </ListItemIcon>
-                            <ListItemText primary='SettingTest' />
-                        </ListItem>
-                    </Link>
                 </List>
             </Drawer>
             <main className={ classes.content }>
@@ -311,7 +322,7 @@ function MainPage(props) {
                     ?  <Container className={ classes.container }>
                         <Grid container spacing={3}>
                             <Grid item xs={12}>
-                                <CreateJoinRoom setCurrentRoom={ setCurrentRoom } />
+                                <CreateJoinRoom setCurrentRoom={ setCurrentRoom } setRedirectBackToHome={ setRedirectBackToHome }/>
                             </Grid>
                         </Grid>
                     </Container>
@@ -320,9 +331,18 @@ function MainPage(props) {
                     ? <Container className={ classes.container }>
                         <Grid container spacing={3}>
                             <Grid item xs={12}>
-                                {
-                                    currentRoom && username && <ChatRoom username={ username } currentRoom={ currentRoom } />
-                                }
+                            {
+                                redirectBackToHome && <RedirectToHome setRedirectBackToHome={ setRedirectBackToHome } />
+                            }
+                            {
+                                currentRoom && username &&
+                                <ChatRoom
+                                    username={ username }
+                                    currentRoom={ currentRoom }
+                                    setCurrentRoom={ setCurrentRoom }
+                                    setRedirectBackToHome={ setRedirectBackToHome }
+                                />
+                            }
                             </Grid>
                         </Grid>
                     </Container>
@@ -331,19 +351,29 @@ function MainPage(props) {
                     ? <Container className={ classes.container }>
                         <Grid container spacing={3}>
                             <Grid item xs={7}>
-                                <Users />
+                                <Users 
+                                    instance={instance}
+                                    username={username}
+                                    myfriends={myfriends}
+                                    setmyfriends={setmyfriends}
+                                />
                             </Grid>
                             <Grid item xs={5}>
-                                <Friends />
+                                <Friends 
+                                    instance={instance}
+                                    username={username}
+                                    myfriends={myfriends}
+                                    setmyfriends={setmyfriends}
+                                />
                             </Grid>
                         </Grid>
                     </Container>
 
-                    : loc.pathname === '/settingTest'
+                    : loc.pathname === '/setting'
                     ? <Container className={ classes.container }>
                         <Grid container spacing={3}>
-                            <Grid item xs={12}>
-                                <SettingTest />
+                            <Grid item xs={7}>
+                                <Setting username={ username } setUsername={ setUsername } avatar={ avatar } setAvatar={ setAvatar } />
                             </Grid>
                         </Grid>
                     </Container>
@@ -354,7 +384,12 @@ function MainPage(props) {
                                 <Lobby currentRoom={ currentRoom } setCurrentRoom={ setCurrentRoom } />
                             </Grid>
                             <Grid item xs={4}>
-                                <FriendsOnline />
+                                <FriendsOnline
+                                    instance={instance}
+                                    username={username}
+                                    myfriends={myfriends}
+                                    setmyfriends={setmyfriends}
+                                />
                             </Grid>
                         </Grid>
                     </Container>
@@ -369,28 +404,3 @@ function MainPage(props) {
 }
 
 export default MainPage;
-
-/*
-                        <Grid item xs={12} md={8} lg={9}>
-                            <Paper className={fixedHeightPaper}>
-                                <Chart />
-                            </Paper>
-                        </Grid>
-                        <Grid item xs={12} md={4} lg={3}>
-                            <Paper className={fixedHeightPaper}>
-                                <Deposits />
-                            </Paper>
-                        </Grid>
-                        <Grid item xs={12}>
-                            <Paper className={classes.paper}>
-                                <Orders />
-                            </Paper>
-                        </Grid>
-                    <Box pt={4}>
-                        <Copyright />
-                    </Box>
-import Chart from './Chart';
-import Deposits from './Deposits';
-import Orders from './Orders';
-
-*/

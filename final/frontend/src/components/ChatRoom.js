@@ -3,6 +3,7 @@ import { Paper } from '@material-ui/core';
 import { createStyles, makeStyles, Theme } from '@material-ui/core/styles';
 
 import Avatar from '@material-ui/core/Avatar';
+import Button from '@material-ui/core/Button';
 import IconButton from '@material-ui/core/IconButton';
 import TextField from '@material-ui/core/TextField';
 
@@ -11,6 +12,7 @@ import SendIcon from '@material-ui/icons/Send';
 import axios from 'axios';
 import { io } from 'socket.io-client';
 import { useSnackbar } from 'notistack';
+import { Redirect } from 'react-router-dom';
 
 function createData(name, avatar, message, timestamp) {
     return { name, avatar, message, timestamp};
@@ -112,7 +114,7 @@ const useStyleMessage = makeStyles((theme) =>
         },
         displayName: {
             marginLeft: '20px'
-        }
+        },
     })
 );
 
@@ -156,12 +158,6 @@ function Message({ message, timestamp, avatar, name, direction }) {
     }
 };
 
-function MessageRight(props) {
-    const classes = useStyleMessage();
-    const message = props.message ? props.message : 'no message';
-    const timestamp = props.timestamp ? props.timestamp : '';
-};
-
 const useStylesChatRoom = makeStyles((theme) =>
     createStyles({
         paper: {
@@ -183,11 +179,14 @@ const useStylesChatRoom = makeStyles((theme) =>
         messagesBody: {
             width: '100%',
             overflowY: 'scroll',
-        }
+        },
+        leaveButton: {
+            marginBottom: theme.spacing(2)
+        },
     })
 );
 
-function ChatRoom({ currentRoom, username }) {
+function ChatRoom({ currentRoom, setCurrentRoom, username, setRedirectBackToHome }) {
     const classes = useStylesChatRoom();
     const [messages, setMessages] = useState([]);
     const [currMessage, setCurrMessage] = useState('');
@@ -195,6 +194,11 @@ function ChatRoom({ currentRoom, username }) {
     const [ws, setWs] = useState(null);
     const scrollRef = useRef(null);
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    function handleLeaveRoom() {
+        setCurrentRoom(null);
+        setRedirectBackToHome(true);
+    }
 
     useEffect(async () => {
         const result = await instance.post('/messages', { roomName: currentRoom.roomName }, { withCredentials: true });
@@ -260,6 +264,14 @@ function ChatRoom({ currentRoom, username }) {
                 </div>
                 </Paper>
                 <TextInput roomName={ currentRoom === null ? '' : currentRoom.roomName } />
+                <Button
+                    variant='contained'
+                    color='secondary'
+                    onClick={ handleLeaveRoom }
+                    className={ classes.leaveButton }
+                >
+                    Leave Room
+                </Button>
             </Paper>
         </div>
     );

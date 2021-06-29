@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, Redirect } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+//import { Link, Redirect } from 'react-router-dom';
 import PropTypes from 'prop-types';
 
 import Backdrop from '@material-ui/core/Backdrop';
@@ -10,7 +10,7 @@ import InputBase from '@material-ui/core/InputBase';
 //import InputLabel from '@material-ui/core/InputLabel';
 import Paper from '@material-ui/core/Paper';
 import SearchIcon from '@material-ui/icons/Search';
-import Snackbar from '@material-ui/core/Snackbar';
+//import Snackbar from '@material-ui/core/Snackbar';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
@@ -168,7 +168,7 @@ const useStyles2 = makeStyles((theme) => ({
     },
 }));
 
-function Users() {
+function Users({instance, username, myfriends, setmyfriends}) {
     const classes = useStyles2();
     const [page, setPage] = useState(0);
     const [value, setValue] = useState('');
@@ -176,8 +176,11 @@ function Users() {
     const [showCircularProgress, setShowCircularProgress] = useState(false);
     const rowsPerPage = 5;
 
-    const emptyRows = rowsPerPage - Math.min(rowsPerPage, friends.length - page * rowsPerPage);
+    const emptyRows = (searchresult.length === 0 ?
+    (rowsPerPage - Math.min(rowsPerPage, friends.length - page * rowsPerPage))
+    : (rowsPerPage - Math.min(rowsPerPage, searchresult.length - page * rowsPerPage)))
 
+    //console.log(username)
     const handleChangePage = (event, newPage) => {
       setPage(newPage);
     };
@@ -185,9 +188,26 @@ function Users() {
     const handleSearch = async () => {
         if(value){
             const result = await instance.post('/friends/search', { user: value }, { withCredentials: true });
-            setSearchresult(result.data.body);
+            if(result.data.status === 'success'){
+                setSearchresult(result.data.body);
+            }
+            else{
+                setSearchresult(["No users found"]);
+            }
             console.log(result)
         }
+    }
+
+    const handleFollow = async (friend) => {
+        const newfriends = await instance.post('/friends/follow', { user: username, friend: friend}, { withCredentials: true });
+        //console.log(newfriends.data.body)
+        setmyfriends(newfriends.data.body);
+    }
+
+    const handleUnfollow = async (friend) => {
+        const newfriends = await instance.post('/friends/unfollow', { user: username, friend: friend }, { withCredentials: true });
+        console.log(newfriends.data.body)
+        setmyfriends(newfriends.data.body);
     }
 
     return (
@@ -204,7 +224,7 @@ function Users() {
                 type="submit"
                 className={classes.iconButton}
                 aria-label="search"
-                onClick={handleSearch}
+                onClick={ handleSearch }
             >
                 <SearchIcon />
             </IconButton>
@@ -242,13 +262,31 @@ function Users() {
                             { row.status ? "online" : "offline" }
                         </TableCell>
                         <TableCell style={ { maxWidth: 160 } } >
-                            <Button
-                                variant='outlined'
-                                color='primary'
-                                size='small'
-                            >
-                                follow
-                            </Button>
+                            {
+                                myfriends.findIndex(x => {
+                                    console.log(x[0] === row.username)
+                                    return (x[0] === row.username)
+                                }) === -1 ? (
+                                    <Button
+                                        variant='outlined'
+                                        color='primary'
+                                        size='small'
+                                        onClick={() => handleFollow(row.username)}
+                                    >
+                                        follow
+                                    </Button>
+                                ) : (
+                                    <Button
+                                        variant='outlined'
+                                        color='secondary'
+                                        size='small'
+                                        onClick={() => handleUnfollow(row.username)}
+                                    >
+                                        unfollow
+                                    </Button>
+                                )
+                            }
+                            
                         </TableCell>
                     </TableRow>
                 ))

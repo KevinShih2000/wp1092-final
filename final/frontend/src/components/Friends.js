@@ -1,18 +1,18 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import { useState, useEffect } from 'react';
 
 import AppBar from '@material-ui/core/AppBar';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
-import Checkbox from '@material-ui/core/Checkbox';
 import CommentIcon from '@material-ui/icons/Comment';
 import IconButton from '@material-ui/core/IconButton';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
-import ListItemIcon from '@material-ui/core/ListItemIcon';
+//import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemSecondaryAction from '@material-ui/core/ListItemSecondaryAction';
 import ListItemText from '@material-ui/core/ListItemText';
-import Paper from '@material-ui/core/Paper';
+//import Paper from '@material-ui/core/Paper';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 
@@ -52,16 +52,21 @@ const useStyles2 = makeStyles((theme) => ({
     },
     title: {
         flexGrow: 1,
-        height: 40,
     },
 }));
 
-function Friends() {
+function Friends({instance, username, myfriends, setmyfriends}) {
     const classes = useStyles2();
+
+    const handleclick = async (friend) => {
+        const newfriends = await instance.post('/friends/unfollow', { user: username, friend: friend }, { withCredentials: true });
+        setmyfriends(newfriends.data.body);
+    }
+
     return (
     <>
         <Box boxShadow={1}>
-            <AppBar position="static" style={{ background: '#DD66EE', maxHeight: 50 }}>
+            <AppBar position="static" style={{ background: '#DD66EE'}}>
                 <Toolbar>
                     <Typography variant="h6" className={classes.title}>
                         Friends
@@ -69,16 +74,18 @@ function Friends() {
                 </Toolbar>
             </AppBar>
             <List className={ classes.list }>
-            {friends.map((value) => {
-                const labelId = `list-label-${value}`;
+            { myfriends.length !== 0 ?
+            myfriends.map((value) => {
+                const labelId = `list-label-${value[0]}`;
                 return (
-                    <ListItem key={value} role={undefined} button >
-                        <ListItemText id={labelId} primary={value} />
+                    <ListItem key={value[0]} role={undefined} button >
+                        <ListItemText id={labelId} primary={value[0]} />
                         <ListItemSecondaryAction>
                         <Button
                             variant='outlined'
                             color='secondary'
                             size='small'
+                            onClick={() => handleclick(value[0])}
                         >
                             unfollow
                         </Button>
@@ -88,7 +95,10 @@ function Friends() {
                         </ListItemSecondaryAction>
                     </ListItem>
                 );
-            })}
+            }) : (<ListItem key="empty" >
+                    <ListItemText id="empty" primary="No friends" />
+                </ListItem>
+            )}
             </List>
         </Box>
     </>

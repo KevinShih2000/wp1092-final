@@ -26,6 +26,7 @@ function App() {
             const data = result.data;
             if (data.status === 'success') {
                 setUsername(data.username);
+                setAvatar(data.avatar);
                 setIsLoggedIn(true);
             }
         }
@@ -37,11 +38,13 @@ function App() {
         {
             isLoggedIn
             ? <Switch>
-                <Route path={ ['/home', '/chat', '/room', '/friends', '/settingTest'] }>
+                <Route path={ ['/home', '/chat', '/room', '/friends', '/setting'] }>
                     <MainPage
                         setIsLoggedIn={ setIsLoggedIn }
                         username={ username }
                         setUsername={ setUsername }
+                        avatar={ avatar }
+                        setAvatar={ setAvatar }
                     />
                 </Route>
                 <Route path='/'>
