@@ -951,19 +951,11 @@ router.post('/friends/unfollow', async (req, res, next) => {
         })
 
         console.log(result)
-        if (result.length !== 0) {
-            res.json({
-                status: 'success',
-                body: result,
-            });
-            return;
-        }
-        else{
-            res.json({
-                status: 'not found',
-            });
-            return;
-        }
+        res.json({
+            status: 'success',
+            body: result,
+        });
+        return;
 
     }
     catch (error) {
