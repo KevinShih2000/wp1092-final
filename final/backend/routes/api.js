@@ -812,6 +812,100 @@ router.get('/getUserInfo', async (req, res, next) => {
     }
 });
 
+router.post('/changePassword', async (req, res, next) => {
+    /* Check for empty request */
+    if (!req.body) {
+        res.status(400).json({
+            status: 'failed',
+            reason: 'EmptyBodyError'
+        });
+        return;
+    }
+    const username = req.body.name;
+    const newPassword = req.body.newPassword;
+    const oldPassword = req.body.oldPassword;
+
+    /* Check the type of username and password */
+    if (typeof username !== 'string') {
+        res.status(400).json({
+            status: 'failed',
+            reason: 'TypeError'
+        });
+        return;
+    }
+    if (typeof newPassword !== 'string' || typeof oldPassword !== 'string') {
+        res.status(400).json({
+            status: 'failed',
+            reason: 'TypeError'
+        });
+        return;
+    }
+    let credential;
+    /* Check for duplicate user */
+    try {
+        credential = await User.findOne({ username: username });
+        // console.log(credential);
+
+        if (credential === null) {
+            res.status(400).json({
+                status: 'failed',
+                reason: 'InvalidUsernameOrPassword'
+            });
+            return;
+        }
+        
+        const passwordMatch = await bcrypt.compare(oldPassword, credential.password);
+        if (!passwordMatch) {
+            res.status(400).json({
+                status: 'failed',
+                reason: 'InvalidUsernameOrPassword'
+            });
+            return;
+        }
+        const jwtToken = jwt.sign({ username: username }, process.env.JWT_SECRET, { expiresIn: '1d' });
+        
+        res.cookie('jwt', jwtToken, { 
+            httpOnly: true,
+            secure: true,
+            sameSite: 'strict'
+        });
+
+    }
+    catch (error) {
+        res.status(400).json({
+            status: 'failed',
+            reason: 'DatabaseFailedError'
+        });
+        console.log("here2")
+        return;
+    }
+
+    /* Generate bcrypt password hash */
+    const saltRounds = 10;
+    const bcryptPasswordHash = await bcrypt.hash(newPassword, saltRounds);
+    console.log(typeof bcryptPasswordHash);
+    /* Store password hash into database */
+    try {
+        credential.password = bcryptPasswordHash;
+        credential.save();
+
+        /* return success message if everything is fine */
+        res.json({
+            status: 'success',
+        });
+        return;
+    }
+    catch (error) {
+        // console.log(error)
+        res.status(400).json({
+            status: 'failed',
+            reason: 'DatabaseFailedError'
+        });
+        return;
+    }
+});
+
+
 router.post('/friends/search', async (req, res, next) => {
     /* Check for empty request */
     if (!req.body) {

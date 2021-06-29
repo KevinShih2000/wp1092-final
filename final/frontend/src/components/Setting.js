@@ -15,6 +15,8 @@ import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
+import Snackbar from '@material-ui/core/Snackbar';
+import MuiAlert from '@material-ui/lab/Alert';
 import { makeStyles, useTheme } from '@material-ui/core/styles';
 import axios from 'axios';
 
@@ -40,7 +42,15 @@ const useStyles = makeStyles((theme) => ({
             margin: theme.spacing(2),
         }
     },
-    form: {
+    form1: {
+        display: 'flex',
+        flexDirection: 'column',
+        '* > &': {
+            margin: theme.spacing(10),
+            width: '50ch',
+        },
+    },
+    form2: {
         display: 'flex',
         flexDirection: 'column',
         '* > &': {
@@ -85,6 +95,10 @@ const useStyles = makeStyles((theme) => ({
     
 }));
 
+function Alert(props) {
+    return <MuiAlert elevation={6} variant="filled" {...props} />;
+}
+
 function Setting(props){
     const classes = useStyles();
 
@@ -96,6 +110,11 @@ function Setting(props){
     const [birthday, setBirthday] = useState("");
     const [email, setEmail] = useState("");
     const [company, setCompany] = useState("");
+    const [newPassword ,setNewPassword] = useState("");
+    const [oldPassword, setOldPassword] = useState("");
+    const [showSuccess, setShowSuccess] = useState(false);
+    const [showError, setShowError] = useState(false);
+    const [errorMessage, setErrorMessage] = useState("");
     
 
 
@@ -106,23 +125,24 @@ function Setting(props){
                 params:{ name:username }
             }, { withCredentials: true });
             const data = result.data;
-            console.log(data)
+            // console.log(data)
+            
             setGender(data.gender);
             setBirthday(data.birthday);
             setEmail(data.email);
             setCompany(data.company);
-
-            console.log(company)
+            
 
         }
         catch(error){
-            console.log(error.message);
+            setShowError(true);
+            setErrorMessage('Data reach failed. Please try again later.')
         }
     }
 
 
 
-    async function handleSave() {
+    async function handleAccountSave() {
         try{
             const result = await instance.post('/setting', {
                 name: username,
@@ -133,20 +153,94 @@ function Setting(props){
     
             }, { withCredentials: true });
             const data = result.data;
-            console.log(data.status)
+            // console.log(data.status)
+            if (data.status === 'success'){
+                setShowSuccess(true);
+            }
         }
         catch(error){
-            console.log(error.message);
+            setShowError(true);
+            if (error.message === 'Network Error') {
+                setErrorMessage('Backend is unreachable. Please contact the administrator.');
+            }
+            else if (error.response){
+                const data = error.response.data;
+                if (data.status === 'failed'){
+                    setErrorMessage(data.reason);
+                }
+                else{
+                    setErrorMessage('Unknown error. Please contact the administrator.');
+                }
+            }
+            else{
+                setErrorMessage('Unknown error. Please contact the administrator.');
+            }
         }
 
         setEdit(false);
+    }
+
+    async function handlePasswordSave() {
+
+        if(!newPassword || !oldPassword){
+            setShowSuccess(true);
+            setErrorMessage('Both new and old password is required');
+        }
+        else{
+            try{
+                const result = await instance.post('/changePassword', {
+                    name: username,
+                    oldPassword: oldPassword,
+                    newPassword: newPassword,
+        
+                }, { withCredentials: true });
+                const data = result.data;
+                console.log(data.status)
+                if (data.status === 'success'){
+                    setShowSuccess(true);
+                }
+            }
+            catch(error){
+                setShowError(true);
+                if (error.message === 'Network Error') {
+                    setErrorMessage('Backend is unreachable. Please contact the administrator.');
+                }
+                else if (error.response){
+                    const data = error.response.data;
+                    if (data.status === 'failed') {
+                        setErrorMessage(data.reason);
+                    }
+                    else{
+                        setErrorMessage('Unknown error. Please contact the administrator.');
+                    }
+                }
+                else{
+                    setErrorMessage('Unknown error. Please contact the administrator.');
+                }
+            }
+
+            setNewPassword("");
+            setOldPassword("");
+    
+        }
+        
+        setEdit(false);
+    }
+
+    function handleCloseSuccessMessage(){
+        setShowSuccess(false);
+    }
+
+    function handleCloseErrorMessage(){
+        setShowError(false);
+        setErrorMessage("");
     }
 
     return(
         
         <div className={ classes.root }>
             <Box className={ classes.box1 }>
-                <Avatar alt="admid" className={ classes.avatar } src='https://static.wikia.nocookie.net/virtualyoutuber/images/d/dd/Suzuhara_Lulu_Portrait.png'></Avatar>
+                <Avatar alt={ username } className={ classes.avatar } src='https://static.wikia.nocookie.net/virtualyoutuber/images/d/dd/Suzuhara_Lulu_Portrait.png'></Avatar>
                 <Button variant="contained" color="primary">Upload New Photo</Button>
                 
                 <List>
@@ -179,21 +273,21 @@ function Setting(props){
                 </Toolbar>
                 
             </AppBar>
-            <form className={classes.form} autoComplete="off">
-                <TextField label="User Name" defaultValue={ username } margin="normal" 
+            <form className={classes.form1} autoComplete="off">
+                <TextField label="User Name" value={ username } margin="normal" 
                 InputProps={{ readOnly: true, }}/>
-                <TextField label="Gender" select margin="normal" defaultValue={ gender } onChange={(e)=> setGender(e.target.value)} InputProps={{ readOnly: edit?false:true, }}>
+                <TextField label="Gender" select margin="normal" value={ gender } onChange={(e)=> setGender(e.target.value)} InputProps={{ readOnly: edit?false:true, }}>
                     <MenuItem value="Male">Male</MenuItem>
                     <MenuItem value="Female">Female</MenuItem>
                     <MenuItem value="Other">Other</MenuItem>
                 </TextField>
-                <TextField label="Birthday" margin="normal" defaultValue={ birthday } onChange={(e)=> setBirthday(e.target.value)} InputProps={{ readOnly: edit?false:true, }}/>
-                <TextField label="Email" margin="normal" defaultValue={ email } onChange={(e)=> setEmail(e.target.value)} InputProps={{ readOnly: edit?false:true, }}/>
-                <TextField label="Company" margin="normal" defaultValue={ company } onChange={(e)=> setCompany(e.target.value)} InputProps={{ readOnly: edit?false:true, }}/>
+                <TextField label="Birthday" margin="normal" value={ birthday } onChange={(e)=> setBirthday(e.target.value)} InputProps={{ readOnly: edit?false:true, }}/>
+                <TextField label="Email" margin="normal" value={ email } onChange={(e)=> setEmail(e.target.value)} InputProps={{ readOnly: edit?false:true, }}/>
+                <TextField label="Company" margin="normal" value={ company } onChange={(e)=> setCompany(e.target.value)} InputProps={{ readOnly: edit?false:true, }}/>
                 
             </form>
             {edit?
-                <Button className={ classes.save } variant="contained" onClick={ handleSave }>Save</Button>
+                <Button className={ classes.save } variant="contained" onClick={ handleAccountSave }>Save</Button>
                 :<Button className={ `${classes.save} + ${classes.disable}`} variant="contained" disabled>Save</Button>
             }
             
@@ -206,29 +300,36 @@ function Setting(props){
                     <Typography variant="h6" className={classes.title}>
                         Password Setting
                     </Typography>
-                    {edit?
-                        <Button variant="outlined" size="small" disabled > Edit </Button>
-                        : <Button variant="outlined" size="small" onClick={ (e) => setEdit(true) }> Edit </Button>
-                    }
                     
                 </Toolbar>
                 
             </AppBar>
-            <form className={classes.form} autoComplete="off">
-                <TextField label="New Password" margin="normal" />
-                <TextField label="Old Password" margin="normal"/>
+            <form className={classes.form2} autoComplete="off">
+                <TextField label="New Password" margin="normal" type='password' value={ newPassword } onChange={(e)=>{ setNewPassword(e.target.value); setEdit(true); }}/>
+                <TextField label="Old Password" margin="normal" type='password' value={ oldPassword } onChange={(e)=>{ setOldPassword(e.target.value); setEdit(true); }}/>
             </form>
             {edit?
-                <Button className={ classes.save } variant="contained" onClick={ handleSave }>Save</Button>
-                :<Button className={ `${classes.save} + ${classes.disable}`} variant="contained" disabled>Save</Button>
+                <Button className={ classes.save } variant="contained" onClick={ handlePasswordSave }>Change</Button>
+                :<Button className={ `${classes.save} + ${classes.disable}`} variant="contained" disabled>Change</Button>
             }
             </Box>
-
-
-            :<Box>
-
-            </Box>
+            
+            : <Box></Box>
             }
+
+            <Snackbar open={ showSuccess } autoHideDuration={ 2000 } onClose={ handleCloseSuccessMessage }>
+                <Alert severity='success'>
+                    Saved.
+                </Alert>
+            </Snackbar>
+            <Snackbar open={ showError } autoHideDuration={ 6000 } onClose={ handleCloseErrorMessage }>
+                <Alert onClose={ handleCloseErrorMessage } severity='error'>
+                {
+                    errorMessage
+                }
+                </Alert>
+            </Snackbar>
+            
             
             
         </div>
