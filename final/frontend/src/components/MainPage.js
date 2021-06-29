@@ -51,8 +51,8 @@ import Lobby from './Lobby';
 import Users from './Users';
 import Friends from './Friends'
 import FriendsOnline from './FriendsOnline'
-import CreateJoinRoom from './CreateJoinRoom';
 import ChatRoom from './ChatRoom';
+import CreateJoinRoom from './CreateJoinRoom';
 import Setting from './Setting';
 
 const instance = axios.create({
@@ -314,7 +314,7 @@ function MainPage(props) {
                     ?  <Container className={ classes.container }>
                         <Grid container spacing={3}>
                             <Grid item xs={12}>
-                                <CreateRoom setCurrentRoom={ setCurrentRoom } />
+                                <CreateJoinRoom setCurrentRoom={ setCurrentRoom } />
                             </Grid>
                         </Grid>
                     </Container>
