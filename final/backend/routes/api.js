@@ -740,6 +740,78 @@ router.post('/send', async (req, res, next) => {
     }
 });
 
+router.post('/setting', async (req, res, next) => {
+    /* Check for empty request */
+    if (!req.body) {
+        res.status(400).json({
+            status: 'failed',
+            reason: 'EmptyBodyError'
+        }); return;
+    }
+
+    /* Check the type of username */
+    const username = req.body.name;
+    if (typeof username !== 'string') {
+        res.status(400).json({
+            status: 'failed',
+            reason: 'TypeError'
+        });
+        return;
+    }
+    
+    const user = await User.findOne({ username:username });
+    if(!user) {
+        res.status(400).json({
+            status: 'failed',
+            reason: 'UserNotFound'
+        });
+        return;
+    }
+    else{
+        user.gender = req.body.gender;
+        user.birthday = req.body.birthday;
+        user.email = req.body.email;
+        user.company = req.body.company;
+        user.save()
+
+        res.json({
+            status: 'success',
+        });
+        return;
+
+    }
+});
+
+router.get('/getUserInfo', async (req, res, next) => {
+    /* Check for empty request */
+    if (!req.query) {
+        res.status(400).json({
+            status: 'failed',
+            reason: 'EmptyBodyError'
+        }); return;
+    }
+
+    const username = req.query.name;
+    const user = await User.findOne({ username:username });
+    // console.log(user);
+    if(!user) {
+        res.status(400).json({
+            status: 'failed',
+            reason: 'UserNotFound'
+        });
+        return;
+    }
+    else{
+        res.send({
+            name: user.username,
+            gender: user.gender,
+            birthday: user.birthday,
+            email: user.email,
+            company: user.company,
+        })
+    }
+});
+
 router.post('/friends/search', async (req, res, next) => {
     /* Check for empty request */
     if (!req.body) {

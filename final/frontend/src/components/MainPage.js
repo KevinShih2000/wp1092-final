@@ -51,9 +51,9 @@ import Lobby from './Lobby';
 import Users from './Users';
 import Friends from './Friends'
 import FriendsOnline from './FriendsOnline'
-import CreateRoom from './CreateRoom';
-//import CreateJoinRoom from './CreateJoinRoom';
+import CreateJoinRoom from './CreateJoinRoom';
 import ChatRoom from './ChatRoom';
+import Setting from './Setting';
 
 const instance = axios.create({
     baseURL: process.env.REACT_APP_API_BASE_URL,
@@ -348,6 +348,15 @@ function MainPage(props) {
                                     myfriends={myfriends}
                                     setmyfriends={setmyfriends}
                                 />
+                            </Grid>
+                        </Grid>
+                    </Container>
+
+                    : loc.pathname === '/setting'
+                    ? <Container className={ classes.container }>
+                        <Grid container spacing={3}>
+                            <Grid item xs={7}>
+                                <Setting username={ username } setUsername={ setUsername }/>
                             </Grid>
                         </Grid>
                     </Container>

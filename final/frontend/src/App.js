@@ -40,7 +40,7 @@ function App() {
                 <Route exact path='/'>
                     <Redirect to='/home' />
                 </Route>
-                <Route path={ ['/home', '/chat', '/room', '/friends'] }>
+                <Route path={ ['/home', '/chat', '/room', '/friends', '/setting'] }>
                     <MainPage setIsLoggedIn={ setIsLoggedIn } username={ username } setUsername={ setUsername } />
                 </Route>
                 <Route path='/'>
