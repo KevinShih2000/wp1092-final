@@ -78,6 +78,9 @@ function LoginPage(props) {
     const setIsLoggedIn = props.setIsLoggedIn;
     const setLoginUsername = props.setLoginUsername;
 
+    const avatar = props.avatar;
+    const setAvatar = props.setAvatar;
+
     function handleCloseLoginSuccessMessage() {
         setIsLoggedIn(true);
         setRedirectToMainPage(true);
@@ -99,6 +102,8 @@ function LoginPage(props) {
             }, { withCredentials: true });
             const data = result.data;
             if (data.status === 'success') {
+                const avatarLink = data.avatar;
+                setAvatar(avatarLink);
                 setShowCircularProgress(false);
                 setShowLoginSuccess(true);
                 setLoginUsername(username);

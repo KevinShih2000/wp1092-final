@@ -53,7 +53,7 @@ app.use((err, req, res, next) => {
     if (err) {
         res.status(400).send({
             status: 'failed',
-            reason: err.name
+            reason: err.message
         });
     }
     else {

@@ -6,6 +6,7 @@ const userSchema = new mongoose.Schema({
     avatar: String,
     status: Boolean,
     friends: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    rooms: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Room' }]
 });
 
 const User = mongoose.model('User', userSchema);

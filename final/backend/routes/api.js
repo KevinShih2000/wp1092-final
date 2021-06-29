@@ -3,12 +3,26 @@ const bcrypt = require('bcrypt');
 const uuidv4 = require('uuid').v4;
 const jwt = require('jsonwebtoken');
 const date = require('date-and-time');
+const multer = require('multer');
+const fetch = require('node-fetch');
 
 const User = require('../models/User');
 const Room = require('../models/Room');
 
 const router = express.Router();
 require('dotenv').config();
+
+const upload = multer({
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype === 'image/png' || file.mimetype === 'image/jpeg' || file.mimetype === 'image/gif') {
+            cb(null, true)
+        }
+        else {
+            cb(null, false);
+            return cb(new Error('Only png, jpeg and gif are allowed'));
+        }
+    }
+});
 
 router.post('/sessionLogin', async (req, res, next) => {
     /* Check for empty request */
@@ -50,13 +64,6 @@ router.post('/sessionLogin', async (req, res, next) => {
             res.status(400).json({
                 status: 'failed',
                 reason: 'InvalidJWT'
-            });
-            return;
-        }
-        else {
-            res.status(400).json({
-                status: 'failed',
-                reason: 'UnknownError'
             });
             return;
         }
@@ -165,7 +172,10 @@ router.post('/signup', async (req, res, next) => {
         await User.create({
             username: username,
             password: bcryptPasswordHash,
-            avatar: ''
+            avatar: '',
+            status: true,
+            friends: [],
+            rooms: []
         });
 
         /* return success message if everything is fine */
@@ -239,10 +249,12 @@ router.post('/login', async (req, res, next) => {
         });
 
         res.json({
-            status: 'success'
+            status: 'success',
+            avatar: credential.avatar
         });
     }
     catch (error) {
+        console.log(error);
         res.status(400).json({
             status: 'failed',
             reason: 'DatabaseFailedError'
@@ -329,7 +341,7 @@ router.post('/createRoom', async (req, res, next) => {
         }
 
         /* Retrieve user _id */
-        const currentUser = await User.findOne({ username: username }, { _id: 1 });
+        const currentUser = await User.findOne({ username: username });
         if (currentUser === null) {
             res.status(400).json({
                 status: 'failed',
@@ -352,7 +364,8 @@ router.post('/createRoom', async (req, res, next) => {
             users: [ currentUser._id ],
             messages: []
         });
-        newRoom.save();
+        const newRoom_ = await newRoom.save();
+        currentUser.rooms.push(newRoom_._id);
         
         const io = req.app.get('socketio');
 
@@ -496,7 +509,8 @@ router.post('/joinRoom', async (req, res, next) => {
             return;
         }
         room.users.push(currentUser._id);
-        room.save();
+        const room_ = await room.save();
+        currentUser.rooms.push(room_._id);
 
         const io = req.app.get('socketio');
         io.on('connection', socket => {
@@ -736,6 +750,47 @@ router.post('/send', async (req, res, next) => {
             });
         }
     }
+});
+
+router.post('/upload', upload.single('image'), async (req, res, next) => {
+    const base64Image = req.file.buffer.toString('base64');
+    const response = await fetch('https://api.imgur.com/3/image', {
+        method: 'POST',
+        headers: {
+            'Authorization': 'Client-ID 358e28c786ca56c'
+        },
+        body: base64Image
+    });
+    const data = await response.json();
+    const avatarLink = data.data.link;
+    const jwtToken = req.cookies.jwt;
+    if (!jwtToken) {
+        res.status(400).json({
+            status: 'failed',
+            reason: 'UserNotLogin'
+        });
+        return;
+    }
+
+    const jwtData = await jwt.verify(jwtToken, process.env.JWT_SECRET);
+    const username = jwtData.username;
+
+    const currentUser = await User.findOne({ username: username });
+    if (currentUser === null) {
+        res.status(400).json({
+            status: 'failed',
+            reason: 'UserNotFound'
+        });
+        return;
+    }
+
+    currentUser.avatar = avatarLink;
+    currentUser.save();
+
+    res.json({
+        status: 'success',
+        avatar: avatarLink
+    });
 });
 
 router.post('/friends/search', async (req, res, next) => {

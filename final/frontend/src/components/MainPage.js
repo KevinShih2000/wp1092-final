@@ -55,6 +55,8 @@ import CreateRoom from './CreateRoom';
 import CreateJoinRoom from './CreateJoinRoom';
 import ChatRoom from './ChatRoom';
 
+import SettingTest from './SettingTest';
+
 const instance = axios.create({
     baseURL: process.env.REACT_APP_API_BASE_URL,
     timeout: 60000
@@ -202,6 +204,8 @@ function MainPage(props) {
     const setIsLoggedIn = props.setIsLoggedIn;
     const username = props.username;
     const setUsername = props.setUsername;
+    const avatar = props.avatar;
+    const setAvatar = props.setAvatar;
 
     const loc = useLocation();
 
@@ -290,6 +294,14 @@ function MainPage(props) {
                             <ListItemText primary='Setting' />
                         </ListItem>
                     </Link>
+                    <Link component={ RouterLink } to='/settingTest' className={ classes.listItem }>
+                        <ListItem button>
+                            <ListItemIcon>
+                                <SettingsIcon />
+                            </ListItemIcon>
+                            <ListItemText primary='SettingTest' />
+                        </ListItem>
+                    </Link>
                 </List>
             </Drawer>
             <main className={ classes.content }>
@@ -323,6 +335,15 @@ function MainPage(props) {
                             </Grid>
                             <Grid item xs={5}>
                                 <Friends />
+                            </Grid>
+                        </Grid>
+                    </Container>
+
+                    : loc.pathname === '/settingTest'
+                    ? <Container className={ classes.container }>
+                        <Grid container spacing={3}>
+                            <Grid item xs={12}>
+                                <SettingTest />
                             </Grid>
                         </Grid>
                     </Container>

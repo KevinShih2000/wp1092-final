@@ -10,7 +10,6 @@ import MainPage from './components/MainPage';
 import SignupPage from './components/SignupPage';
 import LoginPage from './components/LoginPage';
 
-
 const instance = axios.create({
     baseURL: process.env.REACT_APP_API_BASE_URL,
     timeout: 60000
@@ -19,6 +18,7 @@ const instance = axios.create({
 function App() {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [username, setUsername] = useState('');
+    const [avatar, setAvatar] = useState('');
 
     useEffect(async () => {
         try {
@@ -37,11 +37,12 @@ function App() {
         {
             isLoggedIn
             ? <Switch>
-                <Route exact path='/'>
-                    <Redirect to='/home' />
-                </Route>
-                <Route path={ ['/home', '/chat', '/room', '/friends'] }>
-                    <MainPage setIsLoggedIn={ setIsLoggedIn } username={ username } setUsername={ setUsername } />
+                <Route path={ ['/home', '/chat', '/room', '/friends', '/settingTest'] }>
+                    <MainPage
+                        setIsLoggedIn={ setIsLoggedIn }
+                        username={ username }
+                        setUsername={ setUsername }
+                    />
                 </Route>
                 <Route path='/'>
                     <Redirect to='/home' />
@@ -55,7 +56,12 @@ function App() {
                     <SignupPage />
                 </Route>
                 <Route exact path='/login'>
-                    <LoginPage setIsLoggedIn={ setIsLoggedIn } setLoginUsername={ setUsername } />
+                    <LoginPage
+                        setIsLoggedIn={ setIsLoggedIn }
+                        setLoginUsername={ setUsername }
+                        avatar={ avatar }
+                        setAvatar={ setAvatar }
+                    />
                 </Route>
                 <Route path='/'>
                     <Redirect to='/' />
