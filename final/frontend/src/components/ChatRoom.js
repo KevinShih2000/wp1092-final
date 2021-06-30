@@ -57,6 +57,7 @@ function TextInput({ roomName }) {
     
     async function handleSendMessage() {
         const result = await instance.post('/send', { roomName: roomName, message: currMessage }, { withCredentials: true });
+        setCurrMessage('');
     }
 
     return (
@@ -66,6 +67,7 @@ function TextInput({ roomName }) {
                 id='standard-text'
                 label='Aa'
                 className={ classes.text }
+                value={currMessage}
                 onChange={ (event) => setCurrMessage(event.target.value) }
             />
             <IconButton

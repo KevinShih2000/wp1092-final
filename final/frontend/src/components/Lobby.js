@@ -136,7 +136,7 @@ const instance = axios.create({
     timeout: 60000
 });
 
-function Lobby({ currentRoom, setCurrentRoom }) {
+function Lobby({ currentRoom, setCurrentRoom, myRooms }) {
     const classes = useStyles2();
     const [page, setPage] = useState(0);
     const [roomId, setRoomId] = useState('');
@@ -157,17 +157,20 @@ function Lobby({ currentRoom, setCurrentRoom }) {
     }
 
     async function joinRoom(roomName) {
+        console.log("here")
         setShowCircularProgress(true);
         try {
             const result = await instance.post('/joinRoom', { roomName }, { withCredentials: true });
             const data = result.data;
             setShowCircularProgress(false);
             if (data.status === 'success') {
+                console.log("here1")
                 setCurrentRoom({ roomName: roomName, roomId: data.roomId });
                 setRoomId(data.roomId);
             }
         }
         catch (error) {
+            console.log(error);
             if (error.message === 'Network Error') {
                 setShowJoinRoomError(true);
                 setJoinRoomErrorMessage('Backend is unreachable. Please contact the administrator.');
@@ -237,7 +240,7 @@ function Lobby({ currentRoom, setCurrentRoom }) {
                     </TableHead>
                     <TableBody>
                     {
-                        roomRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => (
+                        myRooms.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => (
                             <TableRow key={ row.roomName }>
                                 <TableCell component='th' scope='row'>
                                     { row.roomName }
