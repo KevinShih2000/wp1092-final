@@ -14,6 +14,7 @@ require('dotenv').config();
 
 /* Setup the mongodb database. */
 mongoose.connect(process.env.MONGO_URL, { useNewUrlParser: true, useUnifiedTopology: true });
+mongoose.set('useFindAndModify', false);
 const db = mongoose.connection;
 db.on('error', () => console.error('Mongodb connection error'));
 db.once('open', () => console.log('Mongodb connected'));

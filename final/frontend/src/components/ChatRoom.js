@@ -4,15 +4,29 @@ import { createStyles, makeStyles, Theme } from '@material-ui/core/styles';
 
 import Avatar from '@material-ui/core/Avatar';
 import Button from '@material-ui/core/Button';
+import ButtonGroup from '@material-ui/core/ButtonGroup';
+import CircularProgress from '@material-ui/core/CircularProgress';
+import Dialog from '@material-ui/core/Dialog';
+import DialogActions from '@material-ui/core/DialogActions';
+import DialogContent from '@material-ui/core/DialogContent';
+import DialogContentText from '@material-ui/core/DialogContentText';
+import DialogTitle from '@material-ui/core/DialogTitle';
 import IconButton from '@material-ui/core/IconButton';
+import Snackbar from '@material-ui/core/Snackbar';
 import TextField from '@material-ui/core/TextField';
 
 import SendIcon from '@material-ui/icons/Send';
+
+import MuiAlert from '@material-ui/lab/Alert';
 
 import axios from 'axios';
 import { io } from 'socket.io-client';
 import { useSnackbar } from 'notistack';
 import { Redirect } from 'react-router-dom';
+
+function Alert(props) {
+    return <MuiAlert elevation={6} variant="filled" {...props} />;
+}
 
 function createData(name, avatar, message, timestamp) {
     return { name, avatar, message, timestamp};
@@ -180,8 +194,8 @@ const useStylesChatRoom = makeStyles((theme) =>
             width: '100%',
             overflowY: 'scroll',
         },
-        leaveButton: {
-            marginBottom: theme.spacing(2)
+        button: {
+            margin: theme.spacing(2)
         },
     })
 );
@@ -191,11 +205,48 @@ function ChatRoom({ currentRoom, setCurrentRoom, username, setRedirectBackToHome
     const [messages, setMessages] = useState([]);
     const [currMessage, setCurrMessage] = useState('');
     const [newMessage, setNewMessage] = useState(null);
+    const [showLeaveRoomDialog, setShowLeaveRoomDialog] = useState(false);
+    const [showLeaveRoomError, setShowLeaveRoomError] = useState(false);
+    const [leaveRoomErrorMessage, setLeaveRoomErrorMessage] = useState('');
     const [ws, setWs] = useState(null);
+
     const scrollRef = useRef(null);
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-    function handleLeaveRoom() {
+    function handleCloseErrorMessage() {
+        setShowLeaveRoomError(false);
+        setLeaveRoomErrorMessage('');
+    }
+
+    async function handleLeaveRoom(leave) {
+        if (leave) {
+            try {
+                const result = await instance.post('/leaveRoom', { roomName: currentRoom.roomName }, { withCredentials: true });
+                const data = result.data;
+                if (data.status === 'success') {
+                    setCurrentRoom(null);
+                    setRedirectBackToHome(true);
+                }
+            }
+            catch (error) {
+                if (error.message === 'Network Error') {
+                    setShowLeaveRoomError(true);
+                    setLeaveRoomErrorMessage('Backend is unreachable. Please contact the administrator.');
+                }
+                else if (/^timeout of [0-9]+ms exceeded$/.test(error.message)) {
+                    setShowLeaveRoomError(true);
+                    setLeaveRoomErrorMessage('Connection Timeout. Please contact the administrator.');
+                }
+                else {
+                    setShowLeaveRoomError(true);
+                    setLeaveRoomErrorMessage('Unknown error. Please contact the administrator.');
+                }
+            }
+        }
+        setShowLeaveRoomDialog(false);
+    }
+
+    function handleExitRoom() {
         setCurrentRoom(null);
         setRedirectBackToHome(true);
     }
@@ -264,14 +315,54 @@ function ChatRoom({ currentRoom, setCurrentRoom, username, setRedirectBackToHome
                 </div>
                 </Paper>
                 <TextInput roomName={ currentRoom === null ? '' : currentRoom.roomName } />
-                <Button
-                    variant='contained'
-                    color='secondary'
-                    onClick={ handleLeaveRoom }
-                    className={ classes.leaveButton }
+                <ButtonGroup>
+                    <Button
+                        variant='contained'
+                        color='primary'
+                        onClick={ handleExitRoom }
+                        className={ classes.button }
+                    >
+                        Temporary Exit Room
+                    </Button>
+                    <Button
+                        variant='contained'
+                        color='secondary'
+                        onClick={ () => setShowLeaveRoomDialog(true) }
+                        className={ classes.button }
+                    >
+                        Permanently Leave Room
+                    </Button>
+                </ButtonGroup>
+                <Dialog
+                    open={ showLeaveRoomDialog }
+                    onClose={ () => handleLeaveRoom(false) }
+                    minWidth="xl"
+                    fullWidth
+                    aria-labelledby='alert-dialog-title'
+                    aria-describedby='alert-dialog-description'
                 >
-                    Leave Room
-                </Button>
+                    <DialogTitle id='alert-dialog-title'>Leave Room</DialogTitle>
+                    <DialogContent>
+                        <DialogContentText>
+                            Do you really want to leave the room?
+                        </DialogContentText>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={ () => handleLeaveRoom(false) } color='secondary' variant="contained">
+                            Stay
+                        </Button>
+                        <Button onClick={ () => handleLeaveRoom(true) } color='primary' variant="contained" autoFocus>
+                            Leave
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+                <Snackbar open={ showLeaveRoomError } autoHideDuration={ 6000 } onClose={ handleCloseErrorMessage }>
+                    <Alert onClose={ handleCloseErrorMessage } severity='error'>
+                    {
+                        leaveRoomErrorMessage
+                    }
+                    </Alert>
+                </Snackbar>
             </Paper>
         </div>
     );

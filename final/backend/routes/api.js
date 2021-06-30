@@ -368,6 +368,7 @@ router.post('/createRoom', async (req, res, next) => {
         });
         const newRoom_ = await newRoom.save();
         currentUser.rooms.push(newRoom_._id);
+        currentUser.save();
         
         const io = req.app.get('socketio');
 
@@ -382,6 +383,94 @@ router.post('/createRoom', async (req, res, next) => {
         });
     }
     catch (error) {
+        if (error.name === 'JsonWebTokenError') {
+            res.status(400).json({
+                status: 'failed',
+                reason: 'InvalidJWT'
+            });
+            return;
+        }
+        else {
+            res.status(400).json({
+                status: 'failed',
+                reason: 'DatabaseFailedError'
+            });
+        }
+    }
+});
+
+router.post('/leaveRoom', async (req, res, next) => {
+    /* Check for empty request */
+    if (!req.body) {
+        res.status(400).json({
+            status: 'failed',
+            reason: 'EmptyBodyError'
+        });
+        return;
+    }
+
+    /* Check for cookie */
+    if (!req.cookies) {
+        res.status(400).json({
+            status: 'failed',
+            reason: 'UserNotLogin'
+        });
+        return;
+    }
+
+    try {
+        const jwtToken = req.cookies.jwt;
+        if (!jwtToken) {
+            res.status(400).json({
+                status: 'failed',
+                reason: 'UserNotLogin'
+            });
+            return;
+        }
+
+        const jwtData = await jwt.verify(jwtToken, process.env.JWT_SECRET);
+        const username = jwtData.username;
+        const roomName = req.body.roomName;
+
+        /* Check the type of username and password */
+        if (typeof username !== 'string' || typeof roomName !== 'string') {
+            res.status(400).json({
+                status: 'failed',
+                reason: 'TypeError'
+            });
+            return;
+        }
+
+        /* Check for non-existent room */
+        const room = await Room.findOne({ roomName: roomName }).populate('users').exec();
+        if (room === null) {
+            res.status(400).json({
+                status: 'failed',
+                reason: 'RoomNameNotFound'
+            });
+            return;
+        }
+        const user = await User.findOne({ username: username });
+        if (user === null) {
+            res.status(400).json({
+                status: 'failed',
+                reason: 'UserNotFound'
+            });
+            return;
+        }
+
+        const userResult = await User.findOneAndUpdate({ username: username }, { '$pullAll': { 'rooms': [room._id] } } );
+        console.log(userResult);
+        userResult.save();
+        const roomResult = await Room.findOneAndUpdate({ roomName: roomName }, { '$pullAll': { 'users': [user._id] } } );
+        console.log(roomResult);
+        roomResult.save();
+        res.json({
+            status: 'success',
+        });
+    }
+    catch (error) {
+        console.log(error);
         if (error.name === 'JsonWebTokenError') {
             res.status(400).json({
                 status: 'failed',
@@ -513,6 +602,7 @@ router.post('/joinRoom', async (req, res, next) => {
         room.users.push(currentUser._id);
         const room_ = await room.save();
         currentUser.rooms.push(room_._id);
+        currentUser.save();
 
         const io = req.app.get('socketio');
         io.on('connection', socket => {
