@@ -204,7 +204,7 @@ function MainPage(props) {
     const [showCircularProgress, setShowCircularProgress] = useState(false);
     const [currentRoom, setCurrentRoom] = useState(null);
     const [redirectBackToHome, setRedirectBackToHome] = useState(false);
-    const [myfriends, setmyfriends] = useState([]);
+    const [myfriends, setmyfriends] = useState([0]);
     const [myRooms, setMyRooms] = useState([]);
 
     const setIsLoggedIn = props.setIsLoggedIn;
@@ -216,8 +216,9 @@ function MainPage(props) {
     const loc = useLocation();
 
     useEffect(() => {
-        if(myfriends.length === 0){
+        if(myfriends[0] === 0){
             getfriends();
+            changestatus();
         }
         if(myRooms.length === 0){
             getRooms();
@@ -227,9 +228,11 @@ function MainPage(props) {
     async function getfriends() {
         const friendsdata = await instance.post('/friends/get', { user: username }, { withCredentials: true });
         // console.log(friendsdata)
-        if (friendsdata.data.status === 'success') {
-            setmyfriends(friendsdata.data.body);
-        }
+        setmyfriends(friendsdata.data.body);
+    }
+
+    async function changestatus() {
+        await instance.post('/online', { user: username }, { withCredentials: true });
     }
 
     async function getRooms(){
@@ -245,7 +248,7 @@ function MainPage(props) {
         setShowLogoutDialog(false);
         if (logout) {
             setShowCircularProgress(true);
-            const result = await instance.post('/logout', null, { withCredentials: true });
+            const result = await instance.post('/logout', {user: username}, { withCredentials: true });
             const data = result.data;
             setShowCircularProgress(false);
             if (data.status === 'success') {

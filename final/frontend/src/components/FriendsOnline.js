@@ -51,7 +51,7 @@ const useStyles = makeStyles((theme) => ({
 function  FriendsOnline({instance, username, myfriends, setmyfriends}) {
     const classes = useStyles();
 
-    const getfriends = async () => {
+    const getfriendsonline = async () => {
         const data = await instance.post('/friends/get', { user: username }, { withCredentials: true });
         setmyfriends(data.data.body);
     }
@@ -67,8 +67,12 @@ function  FriendsOnline({instance, username, myfriends, setmyfriends}) {
                 </Toolbar>
             </AppBar>
             <List className={ classes.list }>
-            { myfriends.length !== 0 ? 
-                myfriends.map((value) => {
+            { myfriends.length !== 0 && (myfriends.findIndex((f)=>{
+                    return f[1] === true;
+                }) !== -1 ) ? 
+                myfriends.filter((f) => {
+                    return f[1] === true;
+                }).map((value) => {
                 const labelId = `list-label-${value[0]}`;
                 return (
                     <ListItem key={value[0]} role={undefined} button >
