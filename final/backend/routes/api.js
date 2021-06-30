@@ -1354,4 +1354,56 @@ router.post('/online', async (req, res, next) => {
     }
 });
 
+router.post('/friends/info', async (req, res, next) => {
+    /* Check for empty request */
+    if (!req.body) {
+        res.status(400).json({
+            status: 'failed',
+            reason: 'EmptyBodyError'
+        }); return;
+    }
+
+    const username = req.body.user;
+    const friend = req.body.friend;
+
+    /* Check the type of username */
+    if (typeof friend !== 'string') {
+        res.status(400).json({
+            status: 'failed',
+            reason: 'TypeError'
+        });
+        return;
+    }
+    
+    /* Find user */
+    try {
+        const rawdata = await User.findOne({username: friend}).populate('rooms').exec();
+        const len = rawdata.rooms.length;
+        const room = len !== 0 ? rawdata.rooms[len-1].roomName : "No room joined ..."
+        const friendinfo = {
+            name: rawdata.username,
+            status: rawdata.status ? "online" : "offline",
+            gender: rawdata.gender ? rawdata.gender : "No info ...",
+            birthday: rawdata.birthday ? rawdata.birthday : "No info ...",
+            email: rawdata.email ? rawdata.email : "No info ...",
+            company: rawdata.company ? rawdata.company : "No info ...",
+            room: room
+        }
+        //console.log(await User.findOne({username: username}))
+            res.json({
+                status: 'success',
+                body: friendinfo
+            });
+            return;
+
+    }
+    catch (error) {
+        res.status(400).json({
+            status: 'failed',
+            reason: 'DatabaseFailedError'
+        });
+        return;
+    }
+});
+
 module.exports = router;

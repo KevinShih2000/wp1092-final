@@ -289,27 +289,14 @@ function Users({instance, username, myfriends, setmyfriends}) {
                             
                         </TableCell>
                     </TableRow>
-                ))
-                 : 
-                friends.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => (
-                    <TableRow key={ row.name }>
-                        <TableCell component='th' scope='row'>
-                            { row.name }
-                        </TableCell>
-                        <TableCell style={ { maxWidth: 160 } } >
-                            { row.status }
-                        </TableCell>
-                        <TableCell style={ { maxWidth: 160 } } >
-                            <Button
-                                variant='outlined'
-                                color='primary'
-                                size='small'
-                            >
-                                follow
-                            </Button>
+                )): (<TableRow key='Search'>
+                        <TableCell component='th' scope='row' >
+                            <Typography style={{fontWeight: 'bold'}}>
+                                Search for users ...
+                            </Typography>
                         </TableCell>
                     </TableRow>
-                ))
+                )
                 
               }
               {

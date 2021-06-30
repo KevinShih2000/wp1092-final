@@ -38,7 +38,15 @@ const friendsname = [
 const useStyles = makeStyles((theme) => ({
     list: {
         minWidth: 300,
-        maxHeight: 450,
+        maxHeight: 250,
+        minHeight: 250,
+        backgroundColor: theme.palette.background.paper,
+        overflow: 'auto',
+    },
+    listinfo: {
+        minWidth: 300,
+        maxHeight: 150,
+        minHeight: 150,
         backgroundColor: theme.palette.background.paper,
         overflow: 'auto',
     },
@@ -46,19 +54,50 @@ const useStyles = makeStyles((theme) => ({
         flexGrow: 1,
         height: 40,
     },
+    box: {
+        maxHeight: 500,
+        minHeight: 500,
+    }
 }));
 
 function  FriendsOnline({instance, username, myfriends, setmyfriends}) {
     const classes = useStyles();
+    const [info, setinfo] = useState([]);
 
     const getfriendsonline = async () => {
         const data = await instance.post('/friends/get', { user: username }, { withCredentials: true });
         setmyfriends(data.data.body);
     }
 
+    const friendinfo = async (friend) => {
+        const friendinfo = await instance.post('/friends/info', { user: username, friend: friend }, { withCredentials: true });
+        console.log(friendinfo.data.body)
+        setinfo(friendinfo.data.body);
+    }
+/*
+            <ListItem key="gender" >
+            <ListItemText
+                id="genderid"
+                primary={"Gender : "+info.gender} 
+            />
+            </ListItem>
+            <ListItem key="birthday" >
+            <ListItemText
+                id="birthdayid"
+                primary={"Birthday : "+info.birthday} 
+            />
+            </ListItem>
+*/
+    const getinfo = () => {
+        return(
+            <>
+            </>
+        )
+    }
+
     return (
     <>
-        <Box boxShadow={1}>
+        <Box boxShadow={1} className={classes.box}>
             <AppBar position="static" style={{ background: '#DD66EE', maxHeight: 50 }}>
                 <Toolbar>
                     <Typography variant="h6" className={classes.title}>
@@ -75,10 +114,14 @@ function  FriendsOnline({instance, username, myfriends, setmyfriends}) {
                 }).map((value) => {
                 const labelId = `list-label-${value[0]}`;
                 return (
-                    <ListItem key={value[0]} role={undefined} button >
+                    <ListItem key={value[0]} button onClick={() => friendinfo} >
                         <ListItemText id={labelId} primary={value[0]} />
                         <ListItemSecondaryAction>
-                        <IconButton edge="end" aria-label="comments">
+                        <IconButton 
+                            edge="end" 
+                            aria-label="comments"
+                            onClick={() => friendinfo(value[0])}
+                        >
                             <CommentIcon style={{color: '#993399'}}/>
                         </IconButton>
                         </ListItemSecondaryAction>
@@ -89,6 +132,62 @@ function  FriendsOnline({instance, username, myfriends, setmyfriends}) {
                 </ListItem>
             }
             </List>
+            { info.length !== 0 ? (
+                <>
+                <AppBar position="static" style={{ background: '#EEAA55', maxHeight: 50 }}>
+                    <Toolbar>
+                        <Typography variant="h6" >
+                            Info
+                        </Typography>
+                    </Toolbar>
+                </AppBar>
+                <List className={ classes.listinfo }>
+                    <ListItem key="name" >
+                        <ListItemText
+                            id="nameid"
+                            primary={"Name : " + info.name} 
+                        />
+                    </ListItem>
+                    <ListItem key="status" >
+                    <ListItemText
+                        id="statusid"
+                        primary={"Status : "+info.status} 
+                    />
+                    </ListItem> 
+                    <ListItem key="Currentroom" >
+                    <ListItemText
+                        id="Currentroomid"
+                        primary={"Current room : " + info.room} 
+                    />
+                    </ListItem>
+                    <ListItem key="gender" >
+                    <ListItemText
+                        id="genderid"
+                        primary={"Gender : " + info.gender} 
+                    />
+                    </ListItem>
+                    <ListItem key="birthday" >
+                    <ListItemText
+                        id="birthdayid"
+                        primary={"Birthday : "+info.birthday} 
+                    />
+                    </ListItem>
+                    <ListItem key="company" >
+                    <ListItemText
+                        id="companyid"
+                        primary={"Company : "+info.company} 
+                    />
+                    </ListItem>
+                    <ListItem key="email" >
+                    <ListItemText
+                        id="emailid"
+                        primary={"Email : "+info.email} 
+                    />
+                    </ListItem> 
+                </List>
+                </>
+                ) : (<></>)
+            }
         </Box>
     </>
     );
