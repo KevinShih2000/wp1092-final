@@ -10,6 +10,8 @@
     "server": "cd backend && yarn start"
   },
   "dependencies": {
+    "mongoose-deep-populate": "^3.2.0",
+    "multer": "^1.4.2",
     "notistack": "^1.0.9",
     "socket.io-client": "^4.1.2"
   }

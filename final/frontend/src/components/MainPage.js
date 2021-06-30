@@ -205,6 +205,7 @@ function MainPage(props) {
     const [currentRoom, setCurrentRoom] = useState(null);
     const [redirectBackToHome, setRedirectBackToHome] = useState(false);
     const [myfriends, setmyfriends] = useState([]);
+    const [myRooms, setMyRooms] = useState([]);
 
     const setIsLoggedIn = props.setIsLoggedIn;
     const username = props.username;
@@ -218,6 +219,9 @@ function MainPage(props) {
         if(myfriends.length === 0){
             getfriends();
         }
+        if(myRooms.length === 0){
+            getRooms();
+        }
     })
 
     async function getfriends() {
@@ -226,6 +230,15 @@ function MainPage(props) {
         if (friendsdata.data.status === 'success') {
             setmyfriends(friendsdata.data.body);
         }
+    }
+
+    async function getRooms(){
+        const result = await instance.get('/rooms/get', { 
+            params:{ user: username }
+        }, { withCredentials: true });
+        const data = result.data;
+        console.log(data);
+        setMyRooms(data);
     }
 
     async function handleLogout(logout) {
@@ -381,7 +394,7 @@ function MainPage(props) {
                     : <Container className={ classes.container }>
                         <Grid container spacing={3}>
                             <Grid item xs={8}>
-                                <Lobby currentRoom={ currentRoom } setCurrentRoom={ setCurrentRoom } />
+                                <Lobby currentRoom={ currentRoom } setCurrentRoom={ setCurrentRoom } myRooms={ myRooms } />
                             </Grid>
                             <Grid item xs={4}>
                                 <FriendsOnline

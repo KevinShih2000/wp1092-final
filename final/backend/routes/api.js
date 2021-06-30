@@ -368,6 +368,7 @@ router.post('/createRoom', async (req, res, next) => {
         });
         const newRoom_ = await newRoom.save();
         currentUser.rooms.push(newRoom_._id);
+        currentUser.save();
         
         const io = req.app.get('socketio');
 
@@ -513,6 +514,7 @@ router.post('/joinRoom', async (req, res, next) => {
         room.users.push(currentUser._id);
         const room_ = await room.save();
         currentUser.rooms.push(room_._id);
+        currentUser.save();
 
         const io = req.app.get('socketio');
         io.on('connection', socket => {
@@ -1162,6 +1164,76 @@ router.post('/friends/get', async (req, res, next) => {
 
     }
     catch (error) {
+        res.status(400).json({
+            status: 'failed',
+            reason: 'DatabaseFailedError'
+        });
+        return;
+    }
+});
+
+router.get('/rooms/get', async (req, res, next) => {
+   
+    /* Check for empty request */   
+    if (!req.query) {
+        res.status(400).json({
+            status: 'failed',
+            reason: 'EmptyBodyError'
+        }); return;
+    }
+
+    const username = req.query.user;
+
+    /* Check user name */
+    if (typeof username !== 'string') {
+        res.status(400).json({
+            status: 'failed',
+            reason: 'TypeError'
+        });
+        return;
+    }
+    
+    /* Find user */
+    try {
+        
+        const user = await User.findOne({username: username},{rooms:1}).populate({
+            path:'rooms', populate:{ path: 'messages.user'}
+        }).exec();
+        
+        let result = [];
+        user.rooms.map(r => {
+            if(r.messages.length != 0){
+                let lastMsg = r.messages[r.messages.length-1];
+                
+                result.push({
+                    roomName: r.roomName,
+                    memberNum: r.users.length,
+                    lastMessage: {
+                        user: lastMsg.user.username,
+                        message: lastMsg.message,
+                    }
+                });
+            }
+            else{
+                result.push({
+                    roomName: r.roomName,
+                    memberNum: r.users.length,
+                    lastMessage: {
+                        user: " ",
+                        message: " ",
+                    }
+                });
+            }
+            
+            
+        })
+
+        res.send(result);
+        return;
+
+    }
+    catch (error) {
+        console.log(error)
         res.status(400).json({
             status: 'failed',
             reason: 'DatabaseFailedError'
