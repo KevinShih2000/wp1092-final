@@ -119,6 +119,9 @@ function UploadButton({ setAvatar }) {
 
     return (
         <>
+            {
+                currFile === null ? '' : 'Currently chosen file: ' + currFile.name
+            }
             <Button
                 variant='contained'
                 color='primary'
@@ -131,9 +134,6 @@ function UploadButton({ setAvatar }) {
                     onChange={ (event) => setCurrFile(event.target.files[0]) }
                 />
             </Button>
-            {
-                currFile === null ? '' : 'Currently chosen file: ' + currFile.name
-            }
             <Button
                 variant='contained'
                 component='label'
