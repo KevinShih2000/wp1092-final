@@ -42,15 +42,7 @@ const useStyles = makeStyles((theme) => ({
             margin: theme.spacing(2),
         }
     },
-    form1: {
-        display: 'flex',
-        flexDirection: 'column',
-        '* > &': {
-            margin: theme.spacing(10),
-            width: '50ch',
-        },
-    },
-    form2: {
+    form: {
         display: 'flex',
         flexDirection: 'column',
         '* > &': {
@@ -191,7 +183,7 @@ function Setting(props){
         }
         catch(error){
             setShowError(true);
-            setErrorMessage('Data reach failed. Please try again later.')
+            setErrorMessage('Data fetch failed. Please try again later.')
         }
     }
 
@@ -219,7 +211,7 @@ function Setting(props){
             else if (error.response){
                 const data = error.response.data;
                 if (data.status === 'failed'){
-                    setErrorMessage(data.reason);
+                    setErrorMessage('Invalid response.');
                 }
                 else{
                     setErrorMessage('Unknown error. Please contact the administrator.');
@@ -236,9 +228,15 @@ function Setting(props){
     async function handlePasswordSave() {
 
         if(!newPassword || !oldPassword){
-            setShowSuccess(true);
-            setErrorMessage('Both new and old password is required');
+            setShowError(true);
+            setErrorMessage('Both new and old passwords are required.');
         }
+
+        else if(newPassword === oldPassword){
+            setShowError(true);
+            setErrorMessage('New and old passwords should be different.');
+        }
+
         else{
             try{
                 const result = await instance.post('/changePassword', {
@@ -248,7 +246,7 @@ function Setting(props){
         
                 }, { withCredentials: true });
                 const data = result.data;
-                console.log(data.status)
+                // console.log(data.status)
                 if (data.status === 'success'){
                     setShowSuccess(true);
                 }
@@ -261,7 +259,15 @@ function Setting(props){
                 else if (error.response){
                     const data = error.response.data;
                     if (data.status === 'failed') {
-                        setErrorMessage(data.reason);
+                        if (data.reason === 'InvalidUsernameOrPassword') {
+                            setErrorMessage('Incorrect password.');
+                        }
+                        else if (data.reason === 'DatabaseFailedError') {
+                            setErrorMessage('Database error. Please contact the administrator.');
+                        }
+                        else{
+                            setErrorMessage('Unknown error. Please contact the administrator.');
+                        }
                     }
                     else{
                         setErrorMessage('Unknown error. Please contact the administrator.');
@@ -271,12 +277,10 @@ function Setting(props){
                     setErrorMessage('Unknown error. Please contact the administrator.');
                 }
             }
-
-            setNewPassword("");
-            setOldPassword("");
     
         }
-        
+        setNewPassword("");
+        setOldPassword("");
         setEdit(false);
     }
 
@@ -325,7 +329,7 @@ function Setting(props){
                 </Toolbar>
                 
             </AppBar>
-            <form className={classes.form1} autoComplete="off">
+            <form className={classes.form} autoComplete="off">
                 <TextField label="User Name" value={ username } margin="normal" 
                 InputProps={{ readOnly: true, }}/>
                 <TextField label="Gender" select margin="normal" value={ gender } onChange={(e)=> setGender(e.target.value)} InputProps={{ readOnly: edit?false:true, }}>
@@ -356,7 +360,7 @@ function Setting(props){
                 </Toolbar>
                 
             </AppBar>
-            <form className={classes.form2} autoComplete="off">
+            <form className={classes.form} autoComplete="off">
                 <TextField label="New Password" margin="normal" type='password' value={ newPassword } onChange={(e)=>{ setNewPassword(e.target.value); setEdit(true); }}/>
                 <TextField label="Old Password" margin="normal" type='password' value={ oldPassword } onChange={(e)=>{ setOldPassword(e.target.value); setEdit(true); }}/>
             </form>

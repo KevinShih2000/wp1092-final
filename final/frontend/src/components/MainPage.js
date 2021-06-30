@@ -226,7 +226,7 @@ function MainPage(props) {
 
     async function getfriends() {
         const friendsdata = await instance.post('/friends/get', { user: username }, { withCredentials: true });
-        console.log(friendsdata)
+        // console.log(friendsdata)
         if (friendsdata.data.status === 'success') {
             setmyfriends(friendsdata.data.body);
         }
@@ -237,7 +237,7 @@ function MainPage(props) {
             params:{ user: username }
         }, { withCredentials: true });
         const data = result.data;
-        console.log(data);
+        // console.log(data);
         setMyRooms(data);
     }
 
