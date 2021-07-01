@@ -81,6 +81,7 @@ function CreateJoinRoom({ setCurrentRoom, setMyRooms }) {
                 setShowCreateRoomDialog(false);
                 setRoomName('');
                 setRoomPassword('');
+                setMyRooms(null);
             }
         }
         catch (error) {
@@ -127,6 +128,7 @@ function CreateJoinRoom({ setCurrentRoom, setMyRooms }) {
                 else if (data.roomId) {
                     setRoomId(data.roomId);
                     setCurrentRoom({ roomName: roomName, roomId: data.roomId })
+                    setMyRooms(null);
                 }
                 else {
                     setShowJoinRoomDialog(false);

@@ -40,7 +40,6 @@ function Alert(props) {
     return <MuiAlert elevation={6} variant="filled" {...props} />;
 }
 
-
 function TablePaginationActions(props) {
     const classes = useStyles1();
     const theme = useTheme();
@@ -103,17 +102,6 @@ function createData(roomName, lastMessage, memberNum) {
     return { roomName, lastMessage, memberNum};
 }
 
-const roomRows = [
-    createData('Cupcake', { user: 'pekora', message: '好油喔 peko' }, 38),
-    createData('Donut', { user: 'pekora', message: '我不看這些的 peko' }, 33),
-    createData('Eclair', { user: 'coco', message: 'Viva la coco' }, 17),
-    createData('Frozen yoghurt', {user: 'gura', message: 'A' }, 41),
-    createData('Gingerbread', { user: 'maimoto', message: '火 舞元 火' }, 19),
-    createData('Honeycomb', { user: 'towa', message: 'TMT' }, 14),
-    createData('Ice cream sandwich', { user: 'DD', message: 'DD' }, 10),
-    createData('Jelly Bean', { user: 'Rick', message: 'Never gonna give U up' }, 0),
-];
-
 const useStyles2 = makeStyles((theme) => ({
     table: {
         minWidth: 500,
@@ -145,7 +133,7 @@ function Lobby({ currentRoom, setCurrentRoom, myRooms }) {
     const [joinRoomErrorMessage, setJoinRoomErrorMessage] = useState('');
     const rowsPerPage = 5;
 
-    const emptyRows = rowsPerPage - Math.min(rowsPerPage, roomRows.length - page * rowsPerPage);
+    const emptyRows = rowsPerPage - Math.min(rowsPerPage, myRooms.length - page * rowsPerPage);
 
     const handleChangePage = (event, newPage) => {
         setPage(newPage);
@@ -282,7 +270,7 @@ function Lobby({ currentRoom, setCurrentRoom, myRooms }) {
                         <TableRow>
                             <TablePagination
                                 colSpan={ 3 }
-                                count={ roomRows.length }
+                                count={ myRooms.length }
                                 rowsPerPage={ rowsPerPage }
                                 rowsPerPageOptions={ [] }
                                 page={ page }
