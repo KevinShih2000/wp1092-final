@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 
 import AppBar from '@material-ui/core/AppBar';
 import Box from '@material-ui/core/Box';
-//import Button from '@material-ui/core/Button';
+import Button from '@material-ui/core/Button';
 import CommentIcon from '@material-ui/icons/Comment';
 import IconButton from '@material-ui/core/IconButton';
 import List from '@material-ui/core/List';
@@ -40,6 +40,10 @@ const useStyles = makeStyles((theme) => ({
     box: {
         maxHeight: 500,
         minHeight: 500,
+    },
+    button: {
+        marginBottom: 7,
+        marginLeft: theme.spacing(25),
     }
 }));
 
@@ -119,9 +123,18 @@ function  FriendsOnline({instance, username, myfriends, setmyfriends}) {
                 <>
                 <AppBar position="static" style={{ background: '#EEAA55', maxHeight: 50 }}>
                     <Toolbar>
-                        <Typography variant="h6" >
+                        <Typography variant="h6" className={classes.title}>
                             Info
                         </Typography>
+                        <Button
+                            className={ classes.button }
+                            variant='contained'
+                            color='secondary'
+                            size='small'
+                            onClick={() => setinfo([])}
+                        >
+                            Close
+                        </Button>
                     </Toolbar>
                 </AppBar>
                 <List className={ classes.listinfo }>
