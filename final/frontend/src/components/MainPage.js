@@ -337,7 +337,7 @@ function MainPage(props) {
                     ?  <Container className={ classes.container }>
                         <Grid container spacing={3}>
                             <Grid item xs={12}>
-                                <CreateJoinRoom setCurrentRoom={ setCurrentRoom } setRedirectBackToHome={ setRedirectBackToHome } setMyRooms={ setMyRoom }/>
+                                <CreateJoinRoom setCurrentRoom={ setCurrentRoom } setRedirectBackToHome={ setRedirectBackToHome } setMyRooms={ setMyRooms }/>
                             </Grid>
                         </Grid>
                     </Container>
