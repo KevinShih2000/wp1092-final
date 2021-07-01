@@ -195,6 +195,8 @@ const useStylesChatRoom = makeStyles((theme) =>
         messagesBody: {
             width: '100%',
             overflowY: 'scroll',
+            height: '70vh',
+            marginTop: theme.spacing(1)
         },
         button: {
             margin: theme.spacing(2)
