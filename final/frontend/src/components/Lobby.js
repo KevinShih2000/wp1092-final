@@ -240,7 +240,7 @@ function Lobby({ currentRoom, setCurrentRoom, myRooms }) {
                     </TableHead>
                     <TableBody>
                     {
-                        myRooms.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => (
+                        (myRooms !== null && myRooms.length !== 0) ? myRooms.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => (
                             <TableRow key={ row.roomName }>
                                 <TableCell component='th' scope='row'>
                                     { row.roomName }
@@ -264,6 +264,11 @@ function Lobby({ currentRoom, setCurrentRoom, myRooms }) {
                                 </TableCell>
                             </TableRow>
                         ))
+                        : <TableRow>
+                            <TableCell component='th' scope='row'>
+                                No rooms.
+                            </TableCell>
+                        </TableRow>
                     }
                     {
                         emptyRows > 0 && (

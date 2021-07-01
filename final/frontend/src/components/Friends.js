@@ -93,7 +93,7 @@ function Friends({instance, username, myfriends, setmyfriends}) {
                 </Toolbar>
             </AppBar>
             <List className={ classes.list }>
-            { myfriends.length !== 0 ?
+            { (myfriends !== null && myfriends.length) !== 0 ?
             myfriends.map((value) => {
                 const labelId = `list-label-${value[0]}`;
                 return (

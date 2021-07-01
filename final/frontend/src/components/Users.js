@@ -263,7 +263,7 @@ function Users({instance, username, myfriends, setmyfriends}) {
                         </TableCell>
                         <TableCell style={ { maxWidth: 160 } } >
                             {
-                                myfriends.findIndex(x => {
+                                myfriends !== null && (myfriends.findIndex(x => {
                                     //console.log(x[0] === row.username)
                                     return (x[0] === row.username)
                                 }) === -1 ? (
@@ -284,7 +284,7 @@ function Users({instance, username, myfriends, setmyfriends}) {
                                     >
                                         unfollow
                                     </Button>
-                                )
+                                ))
                             }
                             
                         </TableCell>

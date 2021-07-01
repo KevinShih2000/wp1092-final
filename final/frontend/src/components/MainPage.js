@@ -204,8 +204,8 @@ function MainPage(props) {
     const [showCircularProgress, setShowCircularProgress] = useState(false);
     const [currentRoom, setCurrentRoom] = useState(null);
     const [redirectBackToHome, setRedirectBackToHome] = useState(false);
-    const [myfriends, setmyfriends] = useState([0]);
-    const [myRooms, setMyRooms] = useState([]);
+    const [myfriends, setmyfriends] = useState(null);
+    const [myRooms, setMyRooms] = useState(null);
 
     const setIsLoggedIn = props.setIsLoggedIn;
     const username = props.username;
@@ -216,14 +216,14 @@ function MainPage(props) {
     const loc = useLocation();
 
     useEffect(() => {
-        if(myfriends[0] === 0){
+        if(myfriends === null){
             getfriends();
             changestatus();
         }
-        if(myRooms.length === 0){
+        if(myRooms === null){
             getRooms();
         }
-    })
+    }, [myfriends, myRooms])
 
     async function getfriends() {
         const friendsdata = await instance.post('/friends/get', { user: username }, { withCredentials: true });
@@ -240,7 +240,6 @@ function MainPage(props) {
             params:{ user: username }
         }, { withCredentials: true });
         const data = result.data;
-        // console.log(data);
         setMyRooms(data);
     }
 
@@ -338,7 +337,7 @@ function MainPage(props) {
                     ?  <Container className={ classes.container }>
                         <Grid container spacing={3}>
                             <Grid item xs={12}>
-                                <CreateJoinRoom setCurrentRoom={ setCurrentRoom } setRedirectBackToHome={ setRedirectBackToHome }/>
+                                <CreateJoinRoom setCurrentRoom={ setCurrentRoom } setRedirectBackToHome={ setRedirectBackToHome } setMyRooms={ setMyRoom }/>
                             </Grid>
                         </Grid>
                     </Container>

@@ -18,23 +18,6 @@ import Typography from '@material-ui/core/Typography';
 
 import { makeStyles, useTheme } from '@material-ui/core/styles';
 
-const friendsname = [
-    'Cupcake',
-    'Donut',
-    'Eclair',
-    'Frozen yoghurt',
-    'Gingerbread',
-    'Honeycomb',
-    'Ice cream sandwich',
-    'Jelly Bean',
-    'KitKat',
-    'Marshmallow',
-    'Macaron',
-    'Pudding',
-    'Cheesecake',
-    'Brownie'
-].sort();
-
 const useStyles = makeStyles((theme) => ({
     list: {
         minWidth: 300,
@@ -106,7 +89,7 @@ function  FriendsOnline({instance, username, myfriends, setmyfriends}) {
                 </Toolbar>
             </AppBar>
             <List className={ classes.list }>
-            { myfriends.length !== 0 && (myfriends.findIndex((f)=>{
+            { myfriends !== null && myfriends.length !== 0 && (myfriends.findIndex((f)=>{
                     return f[1] === true;
                 }) !== -1 ) ? 
                 myfriends.filter((f) => {

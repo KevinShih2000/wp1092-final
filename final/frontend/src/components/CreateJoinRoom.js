@@ -47,7 +47,7 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-function CreateJoinRoom({ setCurrentRoom }) {
+function CreateJoinRoom({ setCurrentRoom, setMyRooms }) {
     const classes = useStyles();
 
     const [roomName, setRoomName] = useState('');
