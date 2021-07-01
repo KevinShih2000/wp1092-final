@@ -265,7 +265,8 @@ router.post('/login', async (req, res, next) => {
 });
 
 router.post('/logout', async (req, res, next) => {
-
+    const username = req.body.user;
+    await User.updateOne({username: username}, {status: false})
     /* Check for cookie */
     if (!req.cookies) {
         res.status(400).json({
@@ -1133,19 +1134,11 @@ router.post('/friends/follow', async (req, res, next) => {
         })
 
         console.log("follow", result)
-        if (result.length !== 0) {
             res.json({
                 status: 'success',
                 body: result,
             });
             return;
-        }
-        else{
-            res.json({
-                status: 'not found',
-            });
-            return;
-        }
 
     }
     catch (error) {
@@ -1183,14 +1176,14 @@ router.post('/friends/unfollow', async (req, res, next) => {
         const rawdata = await User.findOne({username: username}).populate('friends').exec();
         const updatefriend = [...rawdata.friends];
         updatefriend.splice(updatefriend.findIndex(f => f.username === friend), 1)
-        console.log("u", updatefriend)
+        //console.log("u", updatefriend)
         await User.updateOne({username: username}, {friends: updatefriend})
         //console.log(await User.findOne({username: username}))
         const result = updatefriend.map( f => {
             return([f.username, f.status])
         })
 
-        console.log(result)
+        //console.log(result)
         res.json({
             status: 'success',
             body: result,
@@ -1234,21 +1227,12 @@ router.post('/friends/get', async (req, res, next) => {
         const result = newfriends.map( f => {
             return([f.username, f.status])
         })
-
-        console.log("get", result)
-        if (result.length !== 0) {
+        console.log(result)
             res.json({
                 status: 'success',
                 body: result,
             });
             return;
-        }
-        else{
-            res.json({
-                status: 'not found',
-            });
-            return;
-        }
 
     }
     catch (error) {
@@ -1322,6 +1306,98 @@ router.get('/rooms/get', async (req, res, next) => {
     }
     catch (error) {
         console.log(error)
+        res.status(400).json({
+            status: 'failed',
+            reason: 'DatabaseFailedError'
+        });
+        return;
+    }
+});
+
+router.post('/online', async (req, res, next) => {
+    /* Check for empty request */
+    if (!req.body) {
+        res.status(400).json({
+            status: 'failed',
+            reason: 'EmptyBodyError'
+        }); return;
+    }
+
+    const username = req.body.user;
+    //console.log(username, friend)
+
+    /* Check the type of username */
+    if (typeof username !== 'string') {
+        res.status(400).json({
+            status: 'failed',
+            reason: 'TypeError'
+        });
+        return;
+    }
+    
+    /* Find user */
+    try {
+        await User.updateOne({username: username}, {status: true})
+        //console.log(await User.findOne({username: username}))
+            res.json({
+                status: 'success',
+            });
+            return;
+
+    }
+    catch (error) {
+        res.status(400).json({
+            status: 'failed',
+            reason: 'DatabaseFailedError'
+        });
+        return;
+    }
+});
+
+router.post('/friends/info', async (req, res, next) => {
+    /* Check for empty request */
+    if (!req.body) {
+        res.status(400).json({
+            status: 'failed',
+            reason: 'EmptyBodyError'
+        }); return;
+    }
+
+    const username = req.body.user;
+    const friend = req.body.friend;
+
+    /* Check the type of username */
+    if (typeof friend !== 'string') {
+        res.status(400).json({
+            status: 'failed',
+            reason: 'TypeError'
+        });
+        return;
+    }
+    
+    /* Find user */
+    try {
+        const rawdata = await User.findOne({username: friend}).populate('rooms').exec();
+        const len = rawdata.rooms.length;
+        const room = len !== 0 ? rawdata.rooms[len-1].roomName : "No room joined ..."
+        const friendinfo = {
+            name: rawdata.username,
+            status: rawdata.status ? "online" : "offline",
+            gender: rawdata.gender ? rawdata.gender : "No info ...",
+            birthday: rawdata.birthday ? rawdata.birthday : "No info ...",
+            email: rawdata.email ? rawdata.email : "No info ...",
+            company: rawdata.company ? rawdata.company : "No info ...",
+            room: room
+        }
+        //console.log(await User.findOne({username: username}))
+            res.json({
+                status: 'success',
+                body: friendinfo
+            });
+            return;
+
+    }
+    catch (error) {
         res.status(400).json({
             status: 'failed',
             reason: 'DatabaseFailedError'

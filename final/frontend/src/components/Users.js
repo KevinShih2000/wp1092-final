@@ -194,7 +194,7 @@ function Users({instance, username, myfriends, setmyfriends}) {
             else{
                 setSearchresult(["No users found"]);
             }
-            console.log(result)
+            //console.log(result)
         }
     }
 
@@ -206,7 +206,7 @@ function Users({instance, username, myfriends, setmyfriends}) {
 
     const handleUnfollow = async (friend) => {
         const newfriends = await instance.post('/friends/unfollow', { user: username, friend: friend }, { withCredentials: true });
-        console.log(newfriends.data.body)
+        //console.log(newfriends.data.body)
         setmyfriends(newfriends.data.body);
     }
 
@@ -264,7 +264,7 @@ function Users({instance, username, myfriends, setmyfriends}) {
                         <TableCell style={ { maxWidth: 160 } } >
                             {
                                 myfriends.findIndex(x => {
-                                    console.log(x[0] === row.username)
+                                    //console.log(x[0] === row.username)
                                     return (x[0] === row.username)
                                 }) === -1 ? (
                                     <Button
@@ -289,27 +289,14 @@ function Users({instance, username, myfriends, setmyfriends}) {
                             
                         </TableCell>
                     </TableRow>
-                ))
-                 : 
-                friends.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => (
-                    <TableRow key={ row.name }>
-                        <TableCell component='th' scope='row'>
-                            { row.name }
-                        </TableCell>
-                        <TableCell style={ { maxWidth: 160 } } >
-                            { row.status }
-                        </TableCell>
-                        <TableCell style={ { maxWidth: 160 } } >
-                            <Button
-                                variant='outlined'
-                                color='primary'
-                                size='small'
-                            >
-                                follow
-                            </Button>
+                )): (<TableRow key='Search'>
+                        <TableCell component='th' scope='row' >
+                            <Typography style={{fontWeight: 'bold'}}>
+                                Search for users ...
+                            </Typography>
                         </TableCell>
                     </TableRow>
-                ))
+                )
                 
               }
               {
