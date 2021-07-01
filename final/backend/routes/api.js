@@ -1064,6 +1064,7 @@ router.post('/friends/search', async (req, res, next) => {
 
     /* Check the type of username */
     const username = req.body.user;
+    const friend = req.body.friend;
     if (typeof username !== 'string') {
         res.status(400).json({
             status: 'failed',
@@ -1075,8 +1076,12 @@ router.post('/friends/search', async (req, res, next) => {
     /* Find user */
     try {
         const rawdata = await User.find();
-        const result = rawdata.filter(e => e.username.includes(username))
-        if (result !== null) {
+        const data = rawdata.filter(e => e.username.includes(friend))
+        const result = data.filter(e => {
+            return (e.username !== username);
+        })
+        console.log(result);
+        if (result !== null && result.length !== 0) {
             res.json({
                 status: 'success',
                 body: result,

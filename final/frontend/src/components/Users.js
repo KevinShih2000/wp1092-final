@@ -187,7 +187,7 @@ function Users({instance, username, myfriends, setmyfriends}) {
 
     const handleSearch = async () => {
         if(value){
-            const result = await instance.post('/friends/search', { user: value }, { withCredentials: true });
+            const result = await instance.post('/friends/search', { user: username, friend: value }, { withCredentials: true });
             if(result.data.status === 'success'){
                 setSearchresult(result.data.body);
             }
