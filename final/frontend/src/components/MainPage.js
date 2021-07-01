@@ -216,6 +216,7 @@ function MainPage(props) {
     const loc = useLocation();
 
     useEffect(() => {
+        console.log(myRooms);
         if(myfriends === null){
             getfriends();
             changestatus();
@@ -356,6 +357,7 @@ function MainPage(props) {
                                     currentRoom={ currentRoom }
                                     setCurrentRoom={ setCurrentRoom }
                                     setRedirectBackToHome={ setRedirectBackToHome }
+                                    setMyRooms={ setMyRooms }
                                 />
                             }
                             </Grid>

@@ -202,7 +202,7 @@ const useStylesChatRoom = makeStyles((theme) =>
     })
 );
 
-function ChatRoom({ currentRoom, setCurrentRoom, username, setRedirectBackToHome }) {
+function ChatRoom({ currentRoom, setCurrentRoom, username, setRedirectBackToHome, setMyRooms }) {
     const classes = useStylesChatRoom();
     const [messages, setMessages] = useState([]);
     const [currMessage, setCurrMessage] = useState('');
@@ -279,9 +279,15 @@ function ChatRoom({ currentRoom, setCurrentRoom, username, setRedirectBackToHome
     }, [ws]);
 
     useEffect(() => {
-        if (newMessage) {
+        setMyRooms(null);
+        if (newMessage && newMessage.roomName === currentRoom.roomName) {
             let origMessages = [...messages];
-            origMessages.push(newMessage);
+            origMessages.push({
+                name: newMessage.name,
+                message: newMessage.message,
+                timestamp: newMessage.timestamp,
+                avatar: newMessage.avatar
+            });
             setMessages(origMessages);
             if (newMessage.name !== username) {
                 enqueueSnackbar(`${newMessage.name}: ${newMessage.message}`, { variant: 'success' });
