@@ -111,10 +111,10 @@ function LandingPage(props) {
                 >
                     <Grid item xs={12}>
                         <Typography variant="h3" className={ classes.mainTitle }>
-                            標題還沒想好∩(・ω・)∩
+                            [109-2] Web Programming Final
                         </Typography>
                         <Typography variant="h4" className={ classes.subTitle }>
-                            副標題還沒想好∩(・ω・)∩
+                            My Chat Room
                         </Typography>
                     </Grid>
                 </Grid>
