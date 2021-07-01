@@ -313,7 +313,7 @@ function Users({instance, username, myfriends, setmyfriends}) {
                   <TableRow>
                       <TablePagination
                           colSpan={ 3 }
-                          count={ searchresult.length !== 0 ? searchresult.length : friends.length }
+                          count={ (searchresult.length !== 0 && searchresult[0] !== "No users found") ? searchresult.length : 0 }
                           rowsPerPage={ rowsPerPage }
                           rowsPerPageOptions={ [] }
                           page={ page }

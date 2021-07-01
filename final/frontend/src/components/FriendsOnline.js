@@ -15,6 +15,7 @@ import ListItemText from '@material-ui/core/ListItemText';
 //import Paper from '@material-ui/core/Paper';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
+import RefreshIcon from '@material-ui/icons/Refresh';
 
 import { makeStyles, useTheme } from '@material-ui/core/styles';
 
@@ -43,8 +44,9 @@ const useStyles = makeStyles((theme) => ({
     },
     button: {
         marginBottom: 7,
-        marginLeft: theme.spacing(25),
-    }
+        marginLeft: theme.spacing(15),
+        
+    },
 }));
 
 function  FriendsOnline({instance, username, myfriends, setmyfriends}) {
@@ -90,6 +92,13 @@ function  FriendsOnline({instance, username, myfriends, setmyfriends}) {
                     <Typography variant="h6" className={classes.title}>
                         Friends Online
                     </Typography>
+                    <IconButton
+                        className={ classes.button }
+                        size='small'
+                        onClick={() => getfriendsonline()}
+                    >
+                        <RefreshIcon style={{color: 'white'}}/>
+                    </IconButton>
                 </Toolbar>
             </AppBar>
             <List className={ classes.list }>
@@ -121,7 +130,7 @@ function  FriendsOnline({instance, username, myfriends, setmyfriends}) {
             </List>
             { info.length !== 0 ? (
                 <>
-                <AppBar position="static" style={{ background: '#EEAA55', maxHeight: 50 }}>
+                <AppBar position="static" style={{ background: '#EEAA33', maxHeight: 50 }}>
                     <Toolbar>
                         <Typography variant="h6" className={classes.title}>
                             Info
