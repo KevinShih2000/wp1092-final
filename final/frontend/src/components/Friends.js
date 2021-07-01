@@ -64,6 +64,10 @@ const useStyles = makeStyles((theme) => ({
     box: {
         maxHeight: 545,
         minHeight: 545,
+    },
+    button: {
+        marginBottom: 7,
+        marginLeft: theme.spacing(35),
     }
 }));
 
@@ -130,6 +134,15 @@ function Friends({instance, username, myfriends, setmyfriends}) {
                         <Typography variant="h6" >
                             Info
                         </Typography>
+                        <Button
+                            className={ classes.button }
+                            variant='contained'
+                            color='secondary'
+                            size='small'
+                            onClick={() => setinfo([])}
+                        >
+                            Close
+                        </Button>
                     </Toolbar>
                 </AppBar>
                 <List className={ classes.listinfo }>
