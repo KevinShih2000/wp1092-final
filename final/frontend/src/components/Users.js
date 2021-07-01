@@ -10,6 +10,7 @@ import InputBase from '@material-ui/core/InputBase';
 //import InputLabel from '@material-ui/core/InputLabel';
 import Paper from '@material-ui/core/Paper';
 import SearchIcon from '@material-ui/icons/Search';
+import SearchBar from "material-ui-search-bar";
 //import Snackbar from '@material-ui/core/Snackbar';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
@@ -150,8 +151,8 @@ const useStyles2 = makeStyles((theme) => ({
         minHeight: 500,
     },
     head: {
-        backgroundColor: 'white',
-        color: 'black',
+        backgroundColor: '#297edd',
+        color: theme.palette.common.white,
     },
     highlight: {
         backgroundColor: 'rgba(255, 229, 100, 0.2)'
@@ -214,24 +215,16 @@ function Users({instance, username, myfriends, setmyfriends}) {
 
     return (
     <>
-        <Box boxShadow={5}>
-            <InputBase
-                className={classes.input}
-                placeholder="Find Users"
-                inputProps={{ 'aria-label': 'search google maps' }}
-                type="search"
-                onChange={(event => {setValue(event.target.value)})}
+        <Box boxShadow={1}>
+            <SearchBar
+                value={value}
+                onChange={(newValue) => setValue(newValue)}
+                onRequestSearch={handleSearch}
+                placeholder='Find users ...'
             />
-            <IconButton 
-                type="submit"
-                className={classes.iconButton}
-                aria-label="search"
-                onClick={ handleSearch }
-            >
-                <SearchIcon />
-            </IconButton>
         </Box>
-        <TableContainer component={ Paper }>
+        <Box boxShadow={1}>
+        <TableContainer component={ Paper } style={{marginTop: 5}}>
           <Table className={ classes.table } aria-label='custom pagination table'>
               <TableHead>
                   <TableRow>
@@ -334,7 +327,7 @@ function Users({instance, username, myfriends, setmyfriends}) {
       <Backdrop className={ classes.backdrop } open={ showCircularProgress }>
           <CircularProgress color='primary' className={ classes.progress } />
       </Backdrop>
-      
+      </Box>
     </>
     );
 }
