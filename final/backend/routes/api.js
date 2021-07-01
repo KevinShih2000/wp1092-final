@@ -374,8 +374,12 @@ router.post('/createRoom', async (req, res, next) => {
         const io = req.app.get('socketio');
 
         io.on('connection', socket => {
-            console.log('OK3');
+            console.log(username + ' join room ' + roomName)
             socket.join(roomName);
+            socket.on('disconnect', (reason) => {
+                console.log(usename + 'leave room ' + roomName)
+                socket.leave(roomName);
+            })
         })
 
         res.json({
@@ -550,8 +554,12 @@ router.post('/joinRoom', async (req, res, next) => {
                 const io = req.app.get('socketio');
 
                 io.on('connection', socket => {
-                    console.log('OK1');
+                    console.log(username + ' join room ' + roomName)
                     socket.join(roomName);
+                    socket.on('disconnect', (reason) => {
+                        console.log(username + ' leave room ' + roomName)
+                        socket.leave(roomName);
+                    })
                 })
 
                 res.json({
@@ -607,10 +615,13 @@ router.post('/joinRoom', async (req, res, next) => {
 
         const io = req.app.get('socketio');
         io.on('connection', socket => {
-            console.log('OK2');
+            console.log(username + ' join room ' + roomName)
             socket.join(roomName);
+            socket.on('disconnect', (reason) => {
+                console.log(username + ' leave room ' + roomName)
+                socket.leave(roomName);
+            })
         })
-
         res.json({
             status: 'success',
             roomId: room.roomId
@@ -822,7 +833,8 @@ router.post('/send', async (req, res, next) => {
             name: username,
             message: messageBody,
             timestamp: timestamp,
-            avatar: currentUser.avatar
+            avatar: currentUser.avatar,
+            roomName: roomName
         });
 
         res.json({
