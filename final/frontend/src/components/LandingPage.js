@@ -114,7 +114,7 @@ function LandingPage(props) {
                             [109-2] Web Programming Final
                         </Typography>
                         <Typography variant="h4" className={ classes.subTitle }>
-                            My Chat Room
+                            Chat Chat Chat
                         </Typography>
                     </Grid>
                 </Grid>
