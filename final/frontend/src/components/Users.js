@@ -188,10 +188,12 @@ function Users({instance, username, myfriends, setmyfriends}) {
     const handleSearch = async () => {
         if(value){
             const result = await instance.post('/friends/search', { user: username, friend: value }, { withCredentials: true });
+            console.log(result.data)
             if(result.data.status === 'success'){
                 setSearchresult(result.data.body);
             }
             else{
+                console.log("e")
                 setSearchresult(["No users found"]);
             }
             //console.log(result)
@@ -251,8 +253,15 @@ function Users({instance, username, myfriends, setmyfriends}) {
                   </TableRow>
               </TableHead>
               <TableBody>
-              {
-                searchresult.length !== 0 ? 
+              { searchresult[0] === "No users found" ? (
+                  <TableRow key='Search'>
+                    <TableCell component='th' scope='row' >
+                        <Typography>
+                            No users found ...
+                        </Typography>
+                    </TableCell>
+                  </TableRow>
+                ) : searchresult.length !== 0 ? 
                 searchresult.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => (
                     <TableRow key={ row.name }>
                         <TableCell component='th' scope='row'>
