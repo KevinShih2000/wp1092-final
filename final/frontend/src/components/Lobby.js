@@ -133,7 +133,7 @@ function Lobby({ currentRoom, setCurrentRoom, myRooms }) {
     const [joinRoomErrorMessage, setJoinRoomErrorMessage] = useState('');
     const rowsPerPage = 5;
 
-    const emptyRows = rowsPerPage - Math.min(rowsPerPage, myRooms.length - page * rowsPerPage);
+    const emptyRows = rowsPerPage - Math.min(rowsPerPage, (myRooms === null ? 0 : myRooms.length) - page * rowsPerPage);
 
     const handleChangePage = (event, newPage) => {
         setPage(newPage);
@@ -270,7 +270,7 @@ function Lobby({ currentRoom, setCurrentRoom, myRooms }) {
                         <TableRow>
                             <TablePagination
                                 colSpan={ 3 }
-                                count={ myRooms.length }
+                                count={ myRooms === null ? 0 : myRooms.length }
                                 rowsPerPage={ rowsPerPage }
                                 rowsPerPageOptions={ [] }
                                 page={ page }
