@@ -228,6 +228,7 @@ function ChatRoom({ currentRoom, setCurrentRoom, username, setRedirectBackToHome
                 if (data.status === 'success') {
                     setCurrentRoom(null);
                     setRedirectBackToHome(true);
+                    setMyRooms(null);
                 }
             }
             catch (error) {
@@ -251,6 +252,7 @@ function ChatRoom({ currentRoom, setCurrentRoom, username, setRedirectBackToHome
     function handleExitRoom() {
         setCurrentRoom(null);
         setRedirectBackToHome(true);
+        setMyRooms(null);
     }
 
     useEffect(async () => {
