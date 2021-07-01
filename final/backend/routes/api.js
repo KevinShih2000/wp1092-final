@@ -1089,12 +1089,13 @@ router.post('/friends/search', async (req, res, next) => {
             });
             return;
         }
-        const result = data.filter(e => {
+        let result = data.filter(e => {
             return (e.username !== username);
         })
         console.log(result);
         if (result !== null) {
             if(result.length !== 0){
+                result = result.sort((a,b) => a.username.length - b.username.length)
                 res.json({
                     status: 'success',
                     body: result,
