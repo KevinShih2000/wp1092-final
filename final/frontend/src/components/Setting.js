@@ -330,16 +330,15 @@ function Setting(props){
                 
             </AppBar>
             <form className={classes.form} autoComplete="off">
-                <TextField label="User Name" value={ username } margin="normal" 
-                InputProps={{ readOnly: true, }}/>
-                <TextField label="Gender" select margin="normal" value={ gender } onChange={(e)=> setGender(e.target.value)} InputProps={{ readOnly: edit?false:true, }}>
+                <TextField label="User Name" value={ username } margin="normal" disabled/>
+                <TextField label="Gender" select margin="normal" value={ gender } onChange={(e)=> setGender(e.target.value)} InputLabelProps={{ shrink: true, }} disabled={ edit?false:true }>
                     <MenuItem value="Male">Male</MenuItem>
                     <MenuItem value="Female">Female</MenuItem>
                     <MenuItem value="Other">Other</MenuItem>
                 </TextField>
-                <TextField label="Birthday" margin="normal" value={ birthday } onChange={(e)=> setBirthday(e.target.value)} InputProps={{ readOnly: edit?false:true, }}/>
-                <TextField label="Email" margin="normal" value={ email } onChange={(e)=> setEmail(e.target.value)} InputProps={{ readOnly: edit?false:true, }}/>
-                <TextField label="Company" margin="normal" value={ company } onChange={(e)=> setCompany(e.target.value)} InputProps={{ readOnly: edit?false:true, }}/>
+                <TextField label="Birthday" margin="normal" value={ birthday } onChange={(e)=> setBirthday(e.target.value)} InputLabelProps={{ shrink: true, }} disabled={ edit?false:true }/>
+                <TextField label="Email" margin="normal" value={ email } onChange={(e)=> setEmail(e.target.value)} InputLabelProps={{ shrink: true, }} disabled={ edit?false:true }/>
+                <TextField label="Company" margin="normal" value={ company } onChange={(e)=> setCompany(e.target.value)} InputLabelProps={{ shrink: true, }} disabled={ edit?false:true }/>
                 
             </form>
             {edit?
